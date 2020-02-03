@@ -1,8 +1,11 @@
 mod renderer;
 mod wrapper;
 
-use renderer::{Reflection, Renderer};
-use wrapper::{color::Color, vec::V3};
+use renderer::*;
+use wrapper::{
+    color::Color,
+    vec::{V3, V3U},
+};
 
 fn cornell_box() -> renderer::Scene {
     renderer::Scene {
@@ -85,10 +88,22 @@ fn cornell_box() -> renderer::Scene {
 fn main() {
     let scene = cornell_box();
     let renderer = Renderer {
-        width: 400,
-        height: 300,
-        spp: 10,
+        width: 640,
+        height: 480,
+        spp: 16,
+    };
+    let world = WorldSetting {
+        camera: Camera {
+            position: V3::new(50.0, 52.0, 220.0),
+            dir: V3U::from_v3(V3::new(0.0, -0.04, -1.0)),
+            up: V3U::unit_y(),
+        },
+        screen: Screen {
+            width: 30.0 * renderer.width as f64,
+            height: 30.0,
+            dist: 40.0,
+        },
     };
 
-    renderer.write_ppm("out.ppm", &scene).unwrap();
+    renderer.write_ppm("out.ppm", &world, &scene).unwrap();
 }

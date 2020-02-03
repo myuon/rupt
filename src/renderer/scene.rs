@@ -13,11 +13,11 @@ impl Scene {
         let mut result = None;
 
         // 線形探索
-        for i in 0..self.objects.len() {
-            if let Some(hit) = self.objects[i].intersect(ray) {
+        for obj in &self.objects {
+            if let Some(hit) = obj.intersect(ray) {
                 if hit.distance < dist {
                     dist = hit.distance;
-                    result = Some((hit, &self.objects[i]))
+                    result = Some((hit, obj))
                 }
             }
         }

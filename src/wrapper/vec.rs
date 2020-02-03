@@ -106,6 +106,10 @@ impl V3U {
         self.as_v3().scale(scaler)
     }
 
+    pub fn dot(&self, other: &Self) -> f64 {
+        self.as_v3().dot(&other.as_v3())
+    }
+
     pub fn x(&self) -> f64 {
         self.0.x()
     }
@@ -116,6 +120,10 @@ impl V3U {
 
     pub fn z(&self) -> f64 {
         self.0.z()
+    }
+
+    pub fn neg(self) -> Self {
+        V3U(self.0.scale(-1.0))
     }
 }
 
