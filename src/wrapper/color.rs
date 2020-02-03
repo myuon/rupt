@@ -1,10 +1,10 @@
 use std::ops::{Add, AddAssign};
 
-#[derive(Clone, Default)]
-pub struct Color(f32, f32, f32);
+#[derive(Clone, Default, Copy)]
+pub struct Color(f64, f64, f64);
 
 impl Color {
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
         Color(x, y, z)
     }
 
@@ -18,6 +18,14 @@ impl Color {
 
     pub fn black() -> Self {
         Color(0.0, 0.0, 0.0)
+    }
+
+    pub fn scale(self, scaler: f64) -> Color {
+        Color(self.0 * scaler, self.1 * scaler, self.2 * scaler)
+    }
+
+    pub fn blend(self, other: Self) -> Self {
+        Color(self.0 * other.0, self.1 * other.1, self.2 * other.2)
     }
 }
 

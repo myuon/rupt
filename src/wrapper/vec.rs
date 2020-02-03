@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub};
 
-#[derive(Default, PartialEq, PartialOrd, Clone, Debug)]
+#[derive(Default, PartialEq, PartialOrd, Clone, Debug, Copy)]
 pub struct V3(f64, f64, f64);
 
 impl V3 {
@@ -44,6 +44,18 @@ impl V3 {
     pub fn zero() -> Self {
         V3(0.0, 0.0, 0.0)
     }
+
+    pub fn x(&self) -> f64 {
+        self.0
+    }
+
+    pub fn y(&self) -> f64 {
+        self.1
+    }
+
+    pub fn z(&self) -> f64 {
+        self.2
+    }
 }
 
 impl Add<V3> for V3 {
@@ -62,7 +74,7 @@ impl Sub<V3> for V3 {
     }
 }
 
-#[derive(Default, PartialEq, PartialOrd, Clone, Debug)]
+#[derive(Default, PartialEq, PartialOrd, Clone, Debug, Copy)]
 pub struct V3U(V3);
 
 impl V3U {
@@ -88,6 +100,22 @@ impl V3U {
 
     pub fn unit_z() -> Self {
         V3U::from_v3_unsafe(V3(0.0, 0.0, 1.0))
+    }
+
+    pub fn scale(self, scaler: f64) -> V3 {
+        self.as_v3().scale(scaler)
+    }
+
+    pub fn x(&self) -> f64 {
+        self.0.x()
+    }
+
+    pub fn y(&self) -> f64 {
+        self.0.y()
+    }
+
+    pub fn z(&self) -> f64 {
+        self.0.z()
     }
 }
 

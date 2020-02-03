@@ -1,4 +1,4 @@
-use crate::renderer::Sphere;
+use crate::renderer::{HitRecord, Sphere};
 use crate::wrapper::ray::Ray;
 
 #[derive(Clone)]
@@ -8,24 +8,20 @@ pub struct Scene {
 
 impl Scene {
     /// Finds the closest object
-    pub fn intersect(&self, ray: &Ray) -> Option<&Sphere> {
+    pub fn intersect(&self, ray: &Ray) -> Option<(HitRecord, &Sphere)> {
         let mut dist = std::f64::MAX;
-        let mut object_index: i32 = -1;
+        let mut result = None;
 
         // 線形探索
         for i in 0..self.objects.len() {
             if let Some(hit) = self.objects[i].intersect(ray) {
                 if hit.distance < dist {
                     dist = hit.distance;
-                    object_index = i as i32;
+                    result = Some((hit, &self.objects[i]))
                 }
             }
         }
 
-        if object_index != -1 {
-            Some(&self.objects[object_index as usize])
-        } else {
-            None
-        }
+        result
     }
 }
