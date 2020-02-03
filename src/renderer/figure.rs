@@ -1,4 +1,4 @@
-use crate::renderer::Material;
+use crate::renderer::Reflection;
 use crate::wrapper::{
     color::Color,
     ray::Ray,
@@ -7,18 +7,18 @@ use crate::wrapper::{
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HitRecord {
-    distance: f64,
-    position: V3,
-    normal: V3U,
+    pub distance: f64,
+    pub position: V3,
+    pub normal: V3U,
 }
 
 #[derive(Clone, Default)]
 pub struct Sphere {
-    center: V3,
-    radius: f64,
-    emission: Color,
-    color: Color,
-    material: Material,
+    pub center: V3,
+    pub radius: f64,
+    pub emission: Color,
+    pub color: Color,
+    pub reflection: Reflection,
 }
 
 const EPS: f64 = 0.0001;

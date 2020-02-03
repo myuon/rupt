@@ -2,6 +2,10 @@
 pub struct Color(f32, f32, f32);
 
 impl Color {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Color(x, y, z)
+    }
+
     pub fn as_rgb(self) -> (u8, u8, u8) {
         (
             (self.0.min(1.0) * 255.0) as u8,
