@@ -1,3 +1,4 @@
+mod renderer;
 mod wrapper;
 
 fn main() {

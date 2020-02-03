@@ -1,5 +1,6 @@
 use crate::wrapper::vec::*;
 
+#[derive(Clone, Default)]
 pub struct Ray {
     pub origin: V3,
     pub dir: V3U,

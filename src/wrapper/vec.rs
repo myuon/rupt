@@ -40,6 +40,10 @@ impl V3 {
     pub fn multiply(self, other: Self) -> Self {
         V3(self.0 * other.0, self.1 * other.1, self.2 * other.2)
     }
+
+    pub fn zero() -> Self {
+        V3(0.0, 0.0, 0.0)
+    }
 }
 
 impl Add<V3> for V3 {
