@@ -1,7 +1,7 @@
 mod renderer;
 mod wrapper;
 
-use renderer::Reflection;
+use renderer::{Reflection, Renderer};
 use wrapper::{color::Color, vec::V3};
 
 fn cornell_box() -> renderer::Scene {
@@ -83,5 +83,12 @@ fn cornell_box() -> renderer::Scene {
 }
 
 fn main() {
-    println!("Hello, world!");
+    let scene = cornell_box();
+    let renderer = Renderer {
+        width: 400,
+        height: 300,
+        spp: 10,
+    };
+
+    renderer.write_ppm("out.ppm", &scene).unwrap();
 }
