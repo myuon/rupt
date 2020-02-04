@@ -90,7 +90,8 @@ fn main() {
     let renderer = Renderer {
         width: 640,
         height: 480,
-        spp: 64,
+        spp: 4096,
+        gamma: 2.2,
     };
     let world = WorldSetting {
         camera: Camera {

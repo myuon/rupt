@@ -10,8 +10,8 @@ use std::fs::File;
 pub struct Renderer {
     pub width: i32,
     pub height: i32,
-    // samples per pixel
-    pub spp: i32,
+    pub spp: i32,   // samples per pixel
+    pub gamma: f64, // for gamma correction
 }
 
 pub struct Camera {
@@ -118,7 +118,7 @@ impl Renderer {
 
         let colors = self.render(world, scene);
         for c in colors {
-            let (r, g, b) = c.as_rgb();
+            let (r, g, b) = c.gamma_correction(self.gamma).as_rgb();
             write!(file, "{} {} {}\n", r, g, b)?;
         }
 
