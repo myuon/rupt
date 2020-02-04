@@ -3,10 +3,14 @@ use crate::wrapper::ray::Ray;
 
 #[derive(Clone)]
 pub struct Scene {
-    pub objects: Vec<Sphere>,
+    objects: Vec<Sphere>,
 }
 
 impl Scene {
+    pub fn new(objects: Vec<Sphere>) -> Self {
+        Scene { objects }
+    }
+
     /// Finds the closest object
     pub fn intersect(&self, ray: &Ray) -> Option<(HitRecord, &Sphere)> {
         let mut dist = std::f64::MAX;

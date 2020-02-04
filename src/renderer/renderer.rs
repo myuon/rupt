@@ -89,6 +89,9 @@ impl Renderer {
                 return target.emission;
             }
 
+            // NEE
+
+            // 反射
             let reflected = target.reflection.reflected(ray, &hit);
             let next_radience = self
                 .radience(scene, &reflected.ray, depth + 1)
