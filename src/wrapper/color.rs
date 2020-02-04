@@ -16,6 +16,14 @@ impl Color {
         )
     }
 
+    pub fn gamma_correction(self, gamma: f64) -> Self {
+        Color(
+            self.0.powf(1.0 / gamma),
+            self.1.powf(1.0 / gamma),
+            self.2.powf(1.0 / gamma),
+        )
+    }
+
     pub fn black() -> Self {
         Color(0.0, 0.0, 0.0)
     }

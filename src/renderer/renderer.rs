@@ -33,7 +33,6 @@ pub struct WorldSetting {
 
 const DEPTH_LIMIT: i32 = 64;
 const DEPTH_MIN: i32 = 5;
-const EPS: f64 = 0.0001;
 
 impl Renderer {
     pub fn render(&self, world: &WorldSetting, scene: &Scene) -> Vec<Color> {
@@ -90,36 +89,16 @@ impl Renderer {
                 return target.emission;
             }
 
-            // orienting_normal
-            let w = if hit.normal.dot(&ray.dir) < 0.0 {
-                hit.normal
-            } else {
-                hit.normal.neg()
-            };
-            let u = if w.x().abs() > EPS {
-                V3U::from_v3(V3U::unit_y().as_v3().cross(w.as_v3()))
-            } else {
-                V3U::from_v3(V3U::unit_x().as_v3().cross(w.as_v3()))
-            };
-            let v = w.as_v3().cross(u.as_v3());
+            let reflected = target.reflection.reflected(ray, &hit);
+            let next_radience = self
+                .radience(scene, &reflected.ray, depth + 1)
+                .scale(reflected.contribution);
 
-            // hemisphere sampling
-            let r1 = 2.0 * std::f64::consts::PI * rand::random::<f64>();
-            let r2 = rand::random::<f64>();
-            let r2s = r2.sqrt();
-            let next_dir = V3U::from_v3(
-                u.scale(r1.cos() * r2s) + v.scale(r1.sin() * r2s) + w.scale((1.0 - r2).sqrt()),
-            );
-            let next_radience = self.radience(
-                scene,
-                &Ray {
-                    origin: hit.position,
-                    dir: next_dir,
-                },
-                depth + 1,
-            );
-
-            target.emission + target.color.scale(1.0 / q).blend(next_radience)
+            target.emission
+                + target
+                    .color
+                    .scale(1.0 / (q * reflected.rr_prob))
+                    .blend(next_radience)
         } else {
             // 背景色
             Color::new(0.0, 0.5, 0.75)
