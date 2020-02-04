@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign};
 
-#[derive(Clone, Default, Copy, Debug)]
+#[derive(Clone, Default, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Color(f64, f64, f64);
 
 impl Color {

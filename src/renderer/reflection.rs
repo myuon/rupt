@@ -1,7 +1,7 @@
 use crate::renderer::HitRecord;
 use crate::wrapper::{ray::Ray, vec::V3U};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Reflection {
     Diffuse,
     Specular,
@@ -105,7 +105,6 @@ impl Reflection {
                     } else {
                         refraction_ray.dir.dot(&orienting_normal.neg())
                     });
-                let nnt2 = nnt.powf(2.0);
 
                 // 反射光の寄与
                 let re = r0 + (1.0 - r0) * c.powf(5.0);

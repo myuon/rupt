@@ -12,7 +12,7 @@ pub struct HitRecord {
     pub normal: V3U,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq)]
 pub struct Sphere {
     pub center: V3,
     pub radius: f64,
@@ -50,6 +50,19 @@ impl Sphere {
             position: pos,
             normal,
         })
+    }
+
+    pub fn sample(&self) -> (V3, V3U) {
+        loop {
+            let x = rand::random::<f64>();
+            let y = rand::random::<f64>();
+            let z = rand::random::<f64>();
+            let v = V3::new(x, y, z);
+
+            if v.len_square() <= 1.0 {
+                return (v, V3U::from_v3(v - self.center));
+            }
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::renderer::Scene;
+use crate::renderer::{reflection::Reflection, Scene};
 use crate::wrapper::{
     color::Color,
     ray::Ray,
@@ -89,7 +89,42 @@ impl Renderer {
                 return target.emission;
             }
 
+            let mut rad = Color::black();
+
             // NEE
+            /*
+            if let Some((sample_point, sample_point_normal, light)) = scene.sample_on_lights() {
+                let shadow_dir = V3U::from_v3(sample_point - hit.position);
+
+                // 反射面がDiffuseでないとき(= Specular, Refraction)のときは寄与を計算しない
+                // 本来はBSDFを考慮すべき
+                let object = scene
+                    .intersect(&Ray {
+                        origin: hit.position,
+                        dir: shadow_dir,
+                    })
+                    .unwrap()
+                    .1;
+                if object == light && target.reflection == Reflection::Diffuse {
+                    // BSDFはDiffuse面の場合は等しくρ/π
+                    let fs = target.color.scale(1.0 / std::f64::consts::PI);
+                    // PDFは光源面全体から選んでいるから1/4πr^2 (本来はobjectの方から計算すべき)
+                    let pa = 1.0 / (4.0 * std::f64::consts::PI * light.radius * light.radius);
+
+                    // 幾何項
+                    let g = shadow_dir.dot(&hit.normal).abs()
+                        * shadow_dir.neg().dot(&sample_point_normal).abs()
+                        / (sample_point - hit.position).len_square();
+
+                    rad += fs.blend(light.emission).scale(g / pa).scale(1.0 / q);
+                }
+            }
+
+            // 光源からの寄与を二重に計算しないように、光源に当たった場合は寄与を計算しない
+            //if target.emission > Color::black() {
+            //    return Color::black();
+            //}
+            */
 
             // 反射
             let reflected = target.reflection.reflected(ray, &hit);
@@ -97,11 +132,13 @@ impl Renderer {
                 .radience(scene, &reflected.ray, depth + 1)
                 .scale(reflected.contribution);
 
-            target.emission
+            rad += target.emission
                 + target
                     .color
                     .scale(1.0 / (q * reflected.rr_prob))
-                    .blend(next_radience)
+                    .blend(next_radience);
+
+            rad
         } else {
             // 背景色
             Color::new(0.0, 0.5, 0.75)

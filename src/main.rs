@@ -88,7 +88,7 @@ fn main() {
     let renderer = Renderer {
         width: 640,
         height: 480,
-        spp: 4096,
+        spp: 16,
         gamma: 2.2,
     };
     let world = WorldSetting {
