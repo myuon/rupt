@@ -4,6 +4,7 @@ use crate::wrapper::{
     ray::Ray,
     vec::{V3, V3U},
 };
+use rayon::prelude::*;
 use std::fs::File;
 
 pub struct Renderer {
@@ -46,32 +47,33 @@ impl Renderer {
             .scale(world.screen.height);
         let screen_center = world.camera.position + world.camera.dir.scale(world.screen.dist);
 
-        let mut pixels = std::iter::repeat(Color::black())
-            .take((self.width * self.height) as usize)
-            .collect::<Vec<_>>();
+        let mut pixels = Vec::with_capacity((self.width * self.height) as usize);
 
-        for i in 0..(self.width * self.height) {
-            let mut radience = Color::black();
-            for _ in 0..self.spp {
-                let x = (i % self.width) as f64;
-                let y = (self.height - i / self.width - 1) as f64;
+        (0..self.width * self.height)
+            .into_par_iter()
+            .map(move |i| {
+                let mut radience = Color::black();
+                for _ in 0..self.spp {
+                    let x = (i % self.width) as f64;
+                    let y = (self.height - i / self.width - 1) as f64;
 
-                let r1 = rand::random::<f64>();
-                let r2 = rand::random::<f64>();
+                    let r1 = rand::random::<f64>();
+                    let r2 = rand::random::<f64>();
 
-                let screen_position = screen_center
-                    + screen_x.scale((r1 + x) / self.width as f64 - 0.5)
-                    + screen_y.scale((r2 + y) / self.height as f64 - 0.5);
-                let ray = Ray {
-                    origin: world.camera.position,
-                    dir: V3U::from_v3(screen_position - world.camera.position),
-                };
+                    let screen_position = screen_center
+                        + screen_x.scale((r1 + x) / self.width as f64 - 0.5)
+                        + screen_y.scale((r2 + y) / self.height as f64 - 0.5);
+                    let ray = Ray {
+                        origin: world.camera.position,
+                        dir: V3U::from_v3(screen_position - world.camera.position),
+                    };
 
-                radience += self.radience(scene, &ray, 0);
-            }
+                    radience += self.radience(scene, &ray, 0);
+                }
 
-            pixels[i as usize] += radience.scale(1.0 / self.spp as f64);
-        }
+                radience.scale(1.0 / self.spp as f64)
+            })
+            .collect_into_vec(&mut pixels);
 
         pixels
     }
