@@ -54,7 +54,7 @@ impl Renderer {
             let mut radience = Color::black();
             for _ in 0..self.spp {
                 let x = (i % self.width) as f64;
-                let y = (i / self.width) as f64;
+                let y = (self.height - i / self.width - 1) as f64;
 
                 let r1 = rand::random::<f64>();
                 let r2 = rand::random::<f64>();
