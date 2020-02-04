@@ -77,3 +77,29 @@ fn intersect_sphere_example() {
         }
     );
 }
+
+#[test]
+fn intersect_sphere_from_interior() {
+    use crate::wrapper::vec::V3U;
+
+    let sphere = Sphere {
+        radius: 10.0,
+        center: V3::new(0.0, 0.0, 0.0),
+        ..Default::default()
+    };
+
+    let hit = sphere.intersect(&Ray {
+        dir: V3U::unit_z(),
+        origin: V3::zero(),
+    });
+    assert!(hit.is_some());
+    assert_eq!(
+        hit.unwrap(),
+        HitRecord {
+            distance: 10.0,
+            // 内側から衝突した場合でも法線は常に中心から外向きであることに注意
+            normal: V3U::from_v3_unsafe(V3::new(0.0, 0.0, 1.0)),
+            position: V3::new(0.0, 0.0, 10.0),
+        }
+    );
+}

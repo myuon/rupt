@@ -86,22 +86,38 @@ fn cornell_box() -> renderer::Scene {
 }
 
 fn main() {
-    let scene = cornell_box();
+    let scene = renderer::Scene {
+        objects: vec![
+            renderer::Sphere {
+                radius: 10.0,
+                center: V3::new(0.0, -10.0, 50.0),
+                color: Color::new(0.75, 0.75, 0.75),
+                emission: Color::new(0.5, 0.5, 1.0),
+                ..Default::default()
+            },
+            renderer::Sphere {
+                radius: 10000.0,
+                center: V3::new(0.0, 10000.0, 50.0),
+                color: Color::new(0.75, 0.75, 1.0),
+                ..Default::default()
+            },
+        ],
+    };
     let renderer = Renderer {
         width: 640,
         height: 480,
-        spp: 16,
+        spp: 1,
     };
     let world = WorldSetting {
         camera: Camera {
-            position: V3::new(50.0, 52.0, 220.0),
-            dir: V3U::from_v3(V3::new(0.0, -0.04, -1.0)),
+            position: V3::new(0.0, -2.0, -10.0),
+            dir: V3U::from_v3(V3::new(0.0, 0.0, 1.0)),
             up: V3U::unit_y(),
         },
         screen: Screen {
-            width: 30.0 * renderer.width as f64,
+            width: 30.0 * renderer.width as f64 / renderer.height as f64,
             height: 30.0,
-            dist: 40.0,
+            dist: 20.0,
         },
     };
 

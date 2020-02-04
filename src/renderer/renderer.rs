@@ -42,6 +42,7 @@ impl Renderer {
             .scale(world.screen.width);
         let screen_y = screen_x
             .cross(world.camera.dir.as_v3())
+            .normalize()
             .scale(world.screen.height);
         let screen_center = world.camera.position + world.camera.dir.scale(world.screen.dist);
 
