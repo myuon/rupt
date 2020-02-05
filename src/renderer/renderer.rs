@@ -158,8 +158,8 @@ impl Renderer {
         use std::io::{BufWriter, Write};
 
         let mut picture = self.render(world, scene);
-        picture.correct_gamma(self.gamma);
         picture.tone_map();
+        picture.correct_gamma(self.gamma);
 
         let mut file = BufWriter::new(File::create(file_path)?);
         write!(file, "P3\n{} {}\n255\n", self.width, self.height)?;
