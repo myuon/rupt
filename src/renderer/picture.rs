@@ -20,9 +20,11 @@ impl Picture {
     }
 
     pub fn tone_map(&mut self) {
-        let max_white = self.get_max_white();
-        let reinhard_ext =
-            |c: Color| c.map(|v| v * (1.0 + v / (max_white * max_white)) / (1.0 + v));
+        let max_white = self.get_max_luminance();
+        let reinhard_ext = |c: Color| {
+            let lumi = c.luminance();
+            c.adjust_luminance(lumi * (1.0 + (lumi / (max_white * max_white))) / (1.0 + lumi))
+        };
 
         for i in 0..self.pixels.len() {
             let c = self.pixels[i];
@@ -30,10 +32,10 @@ impl Picture {
         }
     }
 
-    fn get_max_white(&self) -> f64 {
+    fn get_max_luminance(&self) -> f64 {
         // find maximum
         self.pixels
             .iter()
-            .fold(0.0 / 0.0, |m, v| v.brightness().max(m))
+            .fold(0.0 / 0.0, |m, v| v.luminance().max(m))
     }
 }

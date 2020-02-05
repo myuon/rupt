@@ -48,8 +48,12 @@ impl Color {
         self.0 * 0.2126 + self.1 * 0.7152 + self.2 * 0.0722
     }
 
-    pub fn set_luminance(self, new_luminance: f64) -> Self {
-        self.map(|v| v * new_luminance / self.luminance())
+    pub fn adjust_luminance(self, new_luminance: f64) -> Self {
+        if self.luminance() < 0.0001 && new_luminance < 0.0001 {
+            self
+        } else {
+            self.map(|v| v * new_luminance / self.luminance())
+        }
     }
 }
 
