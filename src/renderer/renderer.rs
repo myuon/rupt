@@ -151,9 +151,9 @@ impl Renderer {
         world: &WorldSetting,
         scene: &Scene,
     ) -> std::io::Result<()> {
-        use std::io::Write;
+        use std::io::{BufWriter, Write};
 
-        let mut file = File::create(file_path)?;
+        let mut file = BufWriter::new(File::create(file_path)?);
         write!(file, "P3\n{} {}\n255\n", self.width, self.height)?;
 
         let colors = self.render(world, scene);
