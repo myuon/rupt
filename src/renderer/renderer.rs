@@ -1,4 +1,4 @@
-use crate::renderer::{reflection::Reflection, Scene};
+use crate::renderer::{picture::Picture, reflection::Reflection, Scene};
 use crate::wrapper::{
     color::Color,
     ray::Ray,
@@ -35,7 +35,7 @@ const DEPTH_LIMIT: i32 = 64;
 const DEPTH_MIN: i32 = 5;
 
 impl Renderer {
-    pub fn render(&self, world: &WorldSetting, scene: &Scene) -> Vec<Color> {
+    pub fn render(&self, world: &WorldSetting, scene: &Scene) -> Picture {
         let screen_x = (world.camera.dir.as_v3())
             .cross(world.camera.up.as_v3())
             .normalize()
@@ -74,7 +74,7 @@ impl Renderer {
             })
             .collect_into_vec(&mut pixels);
 
-        pixels
+        Picture::new(pixels)
     }
 
     fn radience(&self, scene: &Scene, ray: &Ray, depth: i32, is_previous_specular: bool) -> Color {
@@ -157,12 +157,15 @@ impl Renderer {
     ) -> std::io::Result<()> {
         use std::io::{BufWriter, Write};
 
+        let mut picture = self.render(world, scene);
+        picture.correct_gamma(self.gamma);
+        picture.tone_map();
+
         let mut file = BufWriter::new(File::create(file_path)?);
         write!(file, "P3\n{} {}\n255\n", self.width, self.height)?;
 
-        let colors = self.render(world, scene);
-        for c in colors {
-            let (r, g, b) = c.gamma_correction(self.gamma).as_rgb();
+        for c in picture.as_vec() {
+            let (r, g, b) = c.as_rgb();
             write!(file, "{} {} {}\n", r, g, b)?;
         }
 

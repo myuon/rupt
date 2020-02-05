@@ -35,6 +35,14 @@ impl Color {
     pub fn blend(self, other: Self) -> Self {
         Color(self.0 * other.0, self.1 * other.1, self.2 * other.2)
     }
+
+    pub fn map(self, f: impl Fn(f64) -> f64) -> Self {
+        Color(f(self.0), f(self.1), f(self.2))
+    }
+
+    pub fn brightness(&self) -> f64 {
+        (self.0 + self.1 + self.2) / 3.0
+    }
 }
 
 impl Add<Color> for Color {
