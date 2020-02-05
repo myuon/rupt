@@ -12,7 +12,7 @@ pub struct HitRecord {
     pub normal: V3U,
 }
 
-#[derive(Clone, Default, PartialEq)]
+#[derive(Clone, Default, PartialEq, Debug)]
 pub struct Sphere {
     pub center: V3,
     pub radius: f64,
@@ -60,7 +60,10 @@ impl Sphere {
             let v = V3::new(x, y, z);
 
             if v.len_square() <= 1.0 {
-                return (v, V3U::from_v3(v - self.center));
+                return (
+                    v.scale(self.radius) + self.center,
+                    V3U::from_v3(v - self.center),
+                );
             }
         }
     }

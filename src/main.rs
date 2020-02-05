@@ -77,7 +77,7 @@ fn cornell_box() -> renderer::Scene {
         renderer::Sphere {
             radius: 15.0,
             center: V3::new(50.0, 90.0, 81.6),
-            emission: Color::new(36.0, 36.0, 36.0),
+            emission: Color::new(5.0, 5.0, 5.0),
             ..Default::default()
         },
     ])

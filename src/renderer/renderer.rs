@@ -67,7 +67,7 @@ impl Renderer {
                         dir: V3U::from_v3(screen_position - world.camera.position),
                     };
 
-                    radience += self.radience(scene, &ray, 0);
+                    radience += self.radience(scene, &ray, 0, true);
                 }
 
                 radience.scale(1.0 / self.spp as f64)
@@ -77,7 +77,7 @@ impl Renderer {
         pixels
     }
 
-    fn radience(&self, scene: &Scene, ray: &Ray, depth: i32) -> Color {
+    fn radience(&self, scene: &Scene, ray: &Ray, depth: i32, is_previous_specular: bool) -> Color {
         if let Some((hit, target)) = scene.intersect(ray) {
             // Russian Roulette
             let r = rand::random::<f64>();
@@ -92,10 +92,8 @@ impl Renderer {
             let mut rad = Color::black();
 
             // NEE
-            /*
             if let Some((sample_point, sample_point_normal, light)) = scene.sample_on_lights() {
                 let shadow_dir = V3U::from_v3(sample_point - hit.position);
-
                 // 反射面がDiffuseでないとき(= Specular, Refraction)のときは寄与を計算しない
                 // 本来はBSDFを考慮すべき
                 let object = scene
@@ -110,26 +108,32 @@ impl Renderer {
                     let fs = target.color.scale(1.0 / std::f64::consts::PI);
                     // PDFは光源面全体から選んでいるから1/4πr^2 (本来はobjectの方から計算すべき)
                     let pa = 1.0 / (4.0 * std::f64::consts::PI * light.radius * light.radius);
-
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
                         * shadow_dir.neg().dot(&sample_point_normal).abs()
                         / (sample_point - hit.position).len_square();
-
                     rad += fs.blend(light.emission).scale(g / pa).scale(1.0 / q);
                 }
             }
 
-            // 光源からの寄与を二重に計算しないように、光源に当たった場合は寄与を計算しない
-            //if target.emission > Color::black() {
-            //    return Color::black();
-            //}
-            */
+            // 光源からの寄与を二重に計算しないように、光源に当たった場合は寄与を計算しない(specular面での反射を除く)
+            if target.emission > Color::black() {
+                return if is_previous_specular {
+                    target.emission
+                } else {
+                    Color::black()
+                };
+            }
 
             // 反射
             let reflected = target.reflection.reflected(ray, &hit);
             let next_radience = self
-                .radience(scene, &reflected.ray, depth + 1)
+                .radience(
+                    scene,
+                    &reflected.ray,
+                    depth + 1,
+                    target.reflection == Reflection::Specular,
+                )
                 .scale(reflected.contribution);
 
             rad += target.emission

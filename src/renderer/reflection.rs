@@ -1,7 +1,7 @@
 use crate::renderer::HitRecord;
 use crate::wrapper::{ray::Ray, vec::V3U};
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Reflection {
     Diffuse,
     Specular,
