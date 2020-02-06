@@ -107,7 +107,7 @@ impl Renderer {
                     // BSDFはDiffuse面の場合は等しくρ/π
                     let fs = target.color.scale(1.0 / std::f64::consts::PI);
                     // PDFは光源面全体から選んでいるから1/4πr^2 (本来はobjectの方から計算すべき)
-                    let pa = 1.0 / (4.0 * std::f64::consts::PI * light.radius * light.radius);
+                    let pa = light.pdf();
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
                         * shadow_dir.neg().dot(&sample_point_normal).abs()

@@ -67,6 +67,10 @@ impl Sphere {
             }
         }
     }
+
+    pub fn pdf(&self) -> f64 {
+        1.0 / (4.0 * std::f64::consts::PI * self.radius * self.radius)
+    }
 }
 
 #[test]
