@@ -128,17 +128,25 @@ impl V3U {
 }
 
 #[cfg(test)]
+impl quickcheck::Arbitrary for V3U {
+    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> Self {
+        let v = quickcheck::Arbitrary::arbitrary(g);
+        V3U::from_v3(v)
+    }
+}
+
+#[cfg(test)]
+impl quickcheck::Arbitrary for V3 {
+    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> Self {
+        let (x, y, z) = quickcheck::Arbitrary::arbitrary(g);
+        V3(x, y, z)
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use quickcheck::{Arbitrary, Gen};
     use quickcheck_macros::quickcheck;
-
-    impl Arbitrary for V3 {
-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
-            let (x, y, z) = Arbitrary::arbitrary(g);
-            V3(x, y, z)
-        }
-    }
 
     #[quickcheck]
     fn cross_product_perpendicularity(v1: V3, v2: V3) -> bool {

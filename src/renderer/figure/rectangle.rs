@@ -4,7 +4,7 @@ use crate::wrapper::{
     vec::{V3, V3U},
 };
 
-#[derive(Default, Clone, PartialEq)]
+#[derive(Default, Clone, PartialEq, Debug)]
 pub struct Rectangle {
     pub center: V3,
     pub up: V3U,
@@ -18,14 +18,7 @@ impl Rectangle {
         let t = (self.center.dot(&self.normal.as_v3()) - ray.origin.dot(&self.normal.as_v3()))
             / ray.dir.dot(&self.normal);
         let p = ray.extend_at(t);
-        let across = V3U::from_v3(self.up.as_v3().cross(self.normal.as_v3()));
-        let w = (p - self.center).dot(&across.as_v3());
-        let h = (p - self.center).dot(&self.up.as_v3());
-        if !(-self.width / 2.0 <= w
-            && w <= self.width / 2.0
-            && -self.height / 2.0 <= h
-            && h <= self.height / 2.0)
-        {
+        if !self.has(&p) {
             return None;
         }
 
@@ -36,15 +29,27 @@ impl Rectangle {
         })
     }
 
+    pub fn has(&self, p: &V3) -> bool {
+        let across = V3U::from_v3(self.up.as_v3().cross(self.normal.as_v3()));
+        let w = (*p - self.center).dot(&across.as_v3());
+        let h = (*p - self.center).dot(&self.up.as_v3());
+
+        -self.width / 2.0 <= w
+            && w <= self.width / 2.0
+            && -self.height / 2.0 <= h
+            && h <= self.height / 2.0
+    }
+
     pub fn sample(&self) -> (V3, V3U) {
-        let x = rand::random::<f64>();
+        // random over [-1.0,1.0]
+        let x = rand::random::<f64>() * 2.0 - 1.0;
         let y = rand::random::<f64>();
         let across = self.up.as_v3().cross(self.normal.as_v3());
 
         (
             self.center
-                + self.up.scale(self.height * (y * 2.0 - 1.0))
-                + across.scale(self.width * (x * 2.0 - 1.0)),
+                + self.up.scale((self.height / 2.0) * y)
+                + across.scale((self.width / 2.0) * x),
             self.normal,
         )
     }
@@ -130,4 +135,31 @@ fn intersect_rectangle_example() {
             origin: V3::new(0.0, 0.0, 3.0),
         })
         .is_some());
+}
+
+#[cfg(test)]
+impl quickcheck::Arbitrary for Rectangle {
+    fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> Self {
+        let as_u64 = |x: u64| x as f64;
+
+        Rectangle {
+            center: quickcheck::Arbitrary::arbitrary(g),
+            up: quickcheck::Arbitrary::arbitrary(g),
+            normal: quickcheck::Arbitrary::arbitrary(g),
+            width: as_u64(quickcheck::Arbitrary::arbitrary(g)) + 1.0,
+            height: as_u64(quickcheck::Arbitrary::arbitrary(g)) + 1.0,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use quickcheck_macros::quickcheck;
+
+    #[quickcheck]
+    fn sample_in_rectangle(rect: Rectangle) -> bool {
+        let (p, _) = rect.sample();
+        rect.has(&p)
+    }
 }
