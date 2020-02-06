@@ -1,4 +1,4 @@
-use crate::renderer::{HitRecord, Sphere};
+use crate::renderer::{HitRecord, Object};
 use crate::wrapper::{
     color::Color,
     ray::Ray,
@@ -7,12 +7,12 @@ use crate::wrapper::{
 
 #[derive(Clone)]
 pub struct Scene {
-    objects: Vec<Sphere>,
+    objects: Vec<Object>,
     lights: Vec<usize>,
 }
 
 impl Scene {
-    pub fn new(objects: Vec<Sphere>) -> Self {
+    pub fn new(objects: Vec<Object>) -> Self {
         let light_indices = objects
             .iter()
             .enumerate()
@@ -27,7 +27,7 @@ impl Scene {
     }
 
     /// Finds the closest object
-    pub fn intersect(&self, ray: &Ray) -> Option<(HitRecord, &Sphere)> {
+    pub fn intersect(&self, ray: &Ray) -> Option<(HitRecord, &Object)> {
         let mut dist = std::f64::MAX;
         let mut result = None;
 
@@ -45,7 +45,7 @@ impl Scene {
     }
 
     // returns point, normal, reference to object
-    pub fn sample_on_lights(&self) -> Option<(V3, V3U, &Sphere)> {
+    pub fn sample_on_lights(&self) -> Option<(V3, V3U, &Object)> {
         if self.lights.is_empty() {
             return None;
         }

@@ -1,6 +1,5 @@
-use crate::renderer::{HitRecord, Reflection};
+use crate::renderer::HitRecord;
 use crate::wrapper::{
-    color::Color,
     ray::Ray,
     vec::{V3, V3U},
 };
@@ -11,9 +10,6 @@ const EPS: f64 = 0.0001;
 pub struct Sphere {
     pub center: V3,
     pub radius: f64,
-    pub emission: Color,
-    pub color: Color,
-    pub reflection: Reflection,
 }
 
 impl Sphere {

@@ -1,20 +1,16 @@
-use crate::renderer::{HitRecord, Reflection};
+use crate::renderer::HitRecord;
 use crate::wrapper::{
-    color::Color,
     ray::Ray,
     vec::{V3, V3U},
 };
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq)]
 pub struct Rectangle {
     pub center: V3,
     pub up: V3U,
     pub normal: V3U,
     pub width: f64,
     pub height: f64,
-    pub emission: Color,
-    pub color: Color,
-    pub reflection: Reflection,
 }
 
 impl Rectangle {
