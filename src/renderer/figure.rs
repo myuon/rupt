@@ -7,5 +7,8 @@ pub struct HitRecord {
     pub normal: V3U,
 }
 
+mod rectangle;
 mod sphere;
+
+pub use rectangle::*;
 pub use sphere::*;
