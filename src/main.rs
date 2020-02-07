@@ -93,12 +93,10 @@ fn cornell_box() -> renderer::Scene {
         },
         // light
         renderer::Object {
-            figure: renderer::Figure::Rectangle(renderer::Rectangle {
-                center: V3::new(50.0, 80.0, 81.6),
-                width: 15.0,
-                height: 15.0,
-                normal: V3U::unit_y().neg(),
-                up: V3U::unit_x(),
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(50.0 - 7.5, 80.0, 81.6 - 7.5),
+                a: V3::new(15.0, 0.0, 0.0),
+                b: V3::new(0.0, 0.0, 15.0),
             }),
             emission: Color::new(20.0, 20.0, 20.0),
             ..Default::default()

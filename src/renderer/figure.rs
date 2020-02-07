@@ -29,7 +29,7 @@ pub struct Object {
 #[derive(Clone, PartialEq)]
 pub enum Figure {
     Sphere(Sphere),
-    Rectangle(Rectangle),
+    Rhombus(Rhombus),
 }
 
 impl Default for Figure {
@@ -43,7 +43,7 @@ impl Object {
         use Figure::*;
 
         match &self.figure {
-            Rectangle(r) => r.intersect(ray),
+            Rhombus(r) => r.intersect(ray),
             Sphere(r) => r.intersect(ray),
         }
     }
@@ -52,7 +52,7 @@ impl Object {
         use Figure::*;
 
         match &self.figure {
-            Rectangle(r) => r.sample(),
+            Rhombus(r) => r.sample(),
             Sphere(r) => r.sample(),
         }
     }
@@ -61,7 +61,7 @@ impl Object {
         use Figure::*;
 
         match &self.figure {
-            Rectangle(r) => r.pdf(),
+            Rhombus(r) => r.pdf(),
             Sphere(r) => r.pdf(),
         }
     }
