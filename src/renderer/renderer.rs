@@ -131,7 +131,9 @@ impl Renderer {
                     scene,
                     &reflected.ray,
                     depth + 1,
-                    target.reflection == Reflection::Specular,
+                    // specular面の場合は特別扱いする、refractionも同様
+                    target.reflection == Reflection::Specular
+                        || target.reflection == Reflection::Refraction,
                 )
                 .scale(reflected.contribution);
 
