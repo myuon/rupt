@@ -8,21 +8,27 @@ use wrapper::{
 };
 
 fn cornell_box() -> renderer::Scene {
+    let width = 100.0;
+    let height = 82.0;
+    let depth = 250.0;
+
     renderer::Scene::new(vec![
         // left
         renderer::Object {
-            figure: renderer::Figure::Sphere(renderer::Sphere {
-                radius: 10000.0,
-                center: V3::new(10000.0 + 1.0, 40.8, 81.6),
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(0.0, 0.0, 0.0),
+                a: V3::new(0.0, 0.0, depth),
+                b: V3::new(0.0, height, 0.0),
             }),
             color: Color::new(0.75, 0.25, 0.25),
             ..Default::default()
         },
         // right
         renderer::Object {
-            figure: renderer::Figure::Sphere(renderer::Sphere {
-                radius: 10000.0,
-                center: V3::new(-10000.0 + 99.0, 40.8, 81.6),
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(width, 0.0, 0.0),
+                a: V3::new(0.0, 0.0, depth),
+                b: V3::new(0.0, height, 0.0),
             }),
             color: Color::new(0.25, 0.25, 0.75),
             ..Default::default()
@@ -31,34 +37,37 @@ fn cornell_box() -> renderer::Scene {
         renderer::Object {
             figure: renderer::Figure::Rhombus(renderer::Rhombus {
                 origin: V3::new(0.0, 0.0, 0.0),
-                a: V3::new(50.0 * 2.0, 0.0, 0.0),
-                b: V3::new(0.0, 40.8 * 2.0, 0.0),
+                a: V3::new(width, 0.0, 0.0),
+                b: V3::new(0.0, height, 0.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
             ..Default::default()
         },
         // back
         renderer::Object {
-            figure: renderer::Figure::Sphere(renderer::Sphere {
-                radius: 10000.0,
-                center: V3::new(50.0, 40.8, -10000.0 + 250.0),
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(0.0, 0.0, depth),
+                a: V3::new(width, 0.0, 0.0),
+                b: V3::new(0.0, height, 0.0),
             }),
             ..Default::default()
         },
         // bottom
         renderer::Object {
-            figure: renderer::Figure::Sphere(renderer::Sphere {
-                radius: 10000.0,
-                center: V3::new(50.0, 10000.0, 81.6),
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(0.0, height, 0.0),
+                a: V3::new(width, 0.0, 0.0),
+                b: V3::new(0.0, 0.0, depth),
             }),
             color: Color::new(0.75, 0.75, 0.75),
             ..Default::default()
         },
         // top
         renderer::Object {
-            figure: renderer::Figure::Sphere(renderer::Sphere {
-                radius: 10000.0,
-                center: V3::new(50.0, -10000.0 + 81.6, 81.6),
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(0.0, 0.0, 0.0),
+                a: V3::new(width, 0.0, 0.0),
+                b: V3::new(0.0, 0.0, depth),
             }),
             color: Color::new(0.75, 0.75, 0.75),
             ..Default::default()
@@ -95,7 +104,7 @@ fn cornell_box() -> renderer::Scene {
         // light
         renderer::Object {
             figure: renderer::Figure::Rhombus(renderer::Rhombus {
-                origin: V3::new(50.0 - 7.5, 80.0, 81.6 - 7.5),
+                origin: V3::new(50.0 - 7.5, height - 1.0, 81.6 - 7.5),
                 a: V3::new(15.0, 0.0, 0.0),
                 b: V3::new(0.0, 0.0, 15.0),
             }),

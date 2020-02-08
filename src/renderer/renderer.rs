@@ -134,18 +134,6 @@ impl Renderer {
                     target.reflection == Reflection::Specular,
                 )
                 .scale(reflected.contribution);
-            if rand::random::<f64>() < 0.0001 {
-                match target.figure {
-                    crate::renderer::Figure::Rhombus(_)
-                        if ray.dir.z() * reflected.ray.dir.z() > 0.0 =>
-                    {
-                        println!("{:?}", target);
-                        println!("{:?} {:?}", ray, reflected.ray);
-                        println!("{:?}", next_radience);
-                    }
-                    _ => (),
-                }
-            }
 
             rad += target.emission
                 + target
