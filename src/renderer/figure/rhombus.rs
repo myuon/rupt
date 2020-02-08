@@ -4,6 +4,8 @@ use crate::wrapper::{
     vec::{V3, V3U},
 };
 
+const EPS: f64 = 0.0001;
+
 #[derive(Default, Clone, PartialEq, Debug)]
 pub struct Rhombus {
     pub a: V3,
@@ -17,6 +19,9 @@ impl Rhombus {
         let t = (self.origin - ray.origin).dot(&normal) / ray.dir.as_v3().dot(&normal);
         let p = ray.extend_at(t);
         if !self.has(&p) {
+            return None;
+        }
+        if t < EPS {
             return None;
         }
 

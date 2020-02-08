@@ -12,13 +12,13 @@ pub struct HitRecord {
     pub normal: V3U,
 }
 
-mod rectangle;
+mod rhombus;
 mod sphere;
 
-pub use rectangle::*;
+pub use rhombus::*;
 pub use sphere::*;
 
-#[derive(Clone, PartialEq, Default)]
+#[derive(Clone, PartialEq, Default, Debug)]
 pub struct Object {
     pub figure: Figure,
     pub emission: Color,
@@ -26,10 +26,36 @@ pub struct Object {
     pub reflection: Reflection,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Figure {
     Sphere(Sphere),
     Rhombus(Rhombus),
+    Figures(Vec<Figure>),
+}
+
+impl Figure {
+    pub fn parallelepiped(origin: V3, a: V3, b: V3, c: V3) -> Figure {
+        Figure::Figures(vec![
+            Figure::Rhombus(Rhombus { origin, a, b }),
+            Figure::Rhombus(Rhombus { origin, a, b: c }),
+            Figure::Rhombus(Rhombus { origin, a: b, b: c }),
+            Figure::Rhombus(Rhombus {
+                origin: origin + a,
+                a: b,
+                b: c,
+            }),
+            Figure::Rhombus(Rhombus {
+                origin: origin + b,
+                a,
+                b: c,
+            }),
+            Figure::Rhombus(Rhombus {
+                origin: origin + c,
+                a,
+                b,
+            }),
+        ])
+    }
 }
 
 impl Default for Figure {
@@ -45,6 +71,28 @@ impl Object {
         match &self.figure {
             Rhombus(r) => r.intersect(ray),
             Sphere(r) => r.intersect(ray),
+            Figures(figs) => {
+                let mut min = std::f64::MAX;
+                let mut result = None;
+
+                for fig in figs {
+                    if let Some(hit) = (Object {
+                        figure: fig.clone(),
+                        emission: self.emission,
+                        color: self.color,
+                        reflection: self.reflection.clone(),
+                    }
+                    .intersect(ray))
+                    {
+                        if hit.distance < min {
+                            min = hit.distance;
+                            result = Some(hit);
+                        }
+                    }
+                }
+
+                result
+            }
         }
     }
 
@@ -54,6 +102,16 @@ impl Object {
         match &self.figure {
             Rhombus(r) => r.sample(),
             Sphere(r) => r.sample(),
+            Figures(figs) => {
+                let i = rand::random::<usize>() % figs.len();
+                Object {
+                    figure: figs[i].clone(),
+                    emission: self.emission,
+                    color: self.color,
+                    reflection: self.reflection.clone(),
+                }
+                .sample()
+            }
         }
     }
 
@@ -63,6 +121,20 @@ impl Object {
         match &self.figure {
             Rhombus(r) => r.pdf(),
             Sphere(r) => r.pdf(),
+            Figures(figs) => {
+                figs.iter()
+                    .map(|fig| {
+                        Object {
+                            figure: fig.clone(),
+                            emission: self.emission,
+                            color: self.color,
+                            reflection: self.reflection.clone(),
+                        }
+                        .pdf()
+                    })
+                    .sum::<f64>()
+                    / figs.len() as f64
+            }
         }
     }
 }

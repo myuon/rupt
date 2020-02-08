@@ -106,7 +106,6 @@ impl Renderer {
                 if object == light && target.reflection == Reflection::Diffuse {
                     // BSDFはDiffuse面の場合は等しくρ/π
                     let fs = target.color.scale(1.0 / std::f64::consts::PI);
-                    // PDFは光源面全体から選んでいるから1/4πr^2 (本来はobjectの方から計算すべき)
                     let pa = light.pdf();
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
@@ -135,6 +134,18 @@ impl Renderer {
                     target.reflection == Reflection::Specular,
                 )
                 .scale(reflected.contribution);
+            if rand::random::<f64>() < 0.0001 {
+                match target.figure {
+                    crate::renderer::Figure::Rhombus(_)
+                        if ray.dir.z() * reflected.ray.dir.z() > 0.0 =>
+                    {
+                        println!("{:?}", target);
+                        println!("{:?} {:?}", ray, reflected.ray);
+                        println!("{:?}", next_radience);
+                    }
+                    _ => (),
+                }
+            }
 
             rad += target.emission
                 + target

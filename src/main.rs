@@ -29,9 +29,10 @@ fn cornell_box() -> renderer::Scene {
         },
         // front
         renderer::Object {
-            figure: renderer::Figure::Sphere(renderer::Sphere {
-                radius: 10000.0,
-                center: V3::new(50.0, 40.8, 10000.0),
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(0.0, 0.0, 0.0),
+                a: V3::new(50.0 * 2.0, 0.0, 0.0),
+                b: V3::new(0.0, 40.8 * 2.0, 0.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
             ..Default::default()
@@ -98,7 +99,7 @@ fn cornell_box() -> renderer::Scene {
                 a: V3::new(15.0, 0.0, 0.0),
                 b: V3::new(0.0, 0.0, 15.0),
             }),
-            emission: Color::new(20.0, 20.0, 20.0),
+            emission: Color::new(50.0, 50.0, 50.0),
             ..Default::default()
         },
     ])
