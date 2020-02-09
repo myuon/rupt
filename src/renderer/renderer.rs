@@ -103,7 +103,7 @@ impl Renderer {
                     })
                     .unwrap()
                     .1;
-                if object == light && target.reflection == Reflection::Diffuse {
+                if object == light && target.reflection.is_nee_target() {
                     // BSDFはDiffuse面の場合は等しくρ/π
                     let fs = target.color.scale(1.0 / std::f64::consts::PI);
                     let pa = light.pdf();
@@ -131,9 +131,8 @@ impl Renderer {
                     scene,
                     &reflected.ray,
                     depth + 1,
-                    // specular面の場合は特別扱いする、refractionも同様
-                    target.reflection == Reflection::Specular
-                        || target.reflection == Reflection::Refraction,
+                    // specular面などのNEEの対象でないものの場合は特別扱いする
+                    !target.reflection.is_nee_target(),
                 )
                 .scale(reflected.contribution);
 

@@ -6,6 +6,7 @@ pub enum Reflection {
     Diffuse,
     Specular,
     Refraction,
+    Glossy(f64),
 }
 
 impl Default for Reflection {
@@ -33,6 +34,16 @@ impl Reflected {
 }
 
 impl Reflection {
+    pub fn is_nee_target(&self) -> bool {
+        use Reflection::*;
+
+        match self {
+            Diffuse => true,
+            Glossy(_) => true,
+            _ => false,
+        }
+    }
+
     pub fn reflected(&self, ray: &Ray, hit: &HitRecord) -> Reflected {
         let orienting_normal = if hit.normal.dot(&ray.dir) < 0.0 {
             hit.normal
@@ -45,31 +56,38 @@ impl Reflection {
             dir: V3U::from_v3(ray.dir.as_v3() - hit.normal.scale(2.0 * hit.normal.dot(&ray.dir))),
         };
 
-        match self {
-            Reflection::Diffuse => {
-                let w = orienting_normal;
-                let u = if w.x().abs() > EPS {
-                    V3U::from_v3(V3U::unit_y().as_v3().cross(w.as_v3()))
-                } else {
-                    V3U::from_v3(V3U::unit_x().as_v3().cross(w.as_v3()))
-                };
-                let v = w.as_v3().cross(u.as_v3());
+        let diffuse_ray = {
+            let w = orienting_normal;
+            let u = if w.x().abs() > EPS {
+                V3U::from_v3(V3U::unit_y().as_v3().cross(w.as_v3()))
+            } else {
+                V3U::from_v3(V3U::unit_x().as_v3().cross(w.as_v3()))
+            };
+            let v = w.as_v3().cross(u.as_v3());
 
-                // 半球に沿ったimportance sampling
-                let r1 = 2.0 * std::f64::consts::PI * rand::random::<f64>();
-                let r2 = rand::random::<f64>();
-                let r2s = r2.sqrt();
+            // 半球に沿ったimportance sampling
+            let r1 = 2.0 * std::f64::consts::PI * rand::random::<f64>();
+            let r2 = rand::random::<f64>();
+            let r2s = r2.sqrt();
 
-                Reflected::new(Ray {
-                    origin: hit.position,
-                    dir: V3U::from_v3(
-                        u.scale(r1.cos() * r2s)
-                            + v.scale(r1.sin() * r2s)
-                            + w.scale((1.0 - r2).sqrt()),
-                    ),
-                })
+            Ray {
+                origin: hit.position,
+                dir: V3U::from_v3(
+                    u.scale(r1.cos() * r2s) + v.scale(r1.sin() * r2s) + w.scale((1.0 - r2).sqrt()),
+                ),
             }
+        };
+
+        match self {
+            Reflection::Diffuse => Reflected::new(diffuse_ray),
             Reflection::Specular => Reflected::new(specular_ray),
+            Reflection::Glossy(r) => {
+                let mut specular_ray_mut = specular_ray;
+                specular_ray_mut.dir =
+                    V3U::from_v3(specular_ray_mut.dir.as_v3() + diffuse_ray.dir.as_v3().scale(*r));
+
+                Reflected::new(specular_ray_mut)
+            }
             Reflection::Refraction => {
                 let is_into = hit.normal.dot(&orienting_normal) > 0.0;
 

@@ -41,6 +41,7 @@ fn cornell_box() -> renderer::Scene {
                 b: V3::new(0.0, height, 0.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
+            reflection: Reflection::Glossy(0.1),
             ..Default::default()
         },
         // back
@@ -50,6 +51,7 @@ fn cornell_box() -> renderer::Scene {
                 a: V3::new(width, 0.0, 0.0),
                 b: V3::new(0.0, height, 0.0),
             }),
+            color: Color::new(0.75, 0.75, 0.75),
             ..Default::default()
         },
         // bottom
