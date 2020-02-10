@@ -18,7 +18,7 @@ pub struct HitRecord {
 
 impl HitRecord {
     pub fn reflected_dir(&self, incoming: V3U) -> V3U {
-        V3U::from_v3(incoming.as_v3() + self.normal.scale(2.0 * self.normal.dot(&incoming)))
+        V3U::from_v3(incoming.as_v3() - self.normal.scale(2.0 * self.normal.dot(&incoming)))
     }
 }
 

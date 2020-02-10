@@ -54,7 +54,7 @@ impl Reflection {
     pub fn reflected(&self, ray: &Ray, hit: &HitRecord) -> Reflected {
         let specular_ray = Ray {
             origin: hit.position,
-            dir: V3U::from_v3(ray.dir.as_v3() - hit.normal.scale(2.0 * hit.normal.dot(&ray.dir))),
+            dir: hit.reflected_dir(ray.dir),
         };
 
         let diffuse_ray = {
