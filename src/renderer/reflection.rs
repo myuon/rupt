@@ -39,7 +39,6 @@ impl Reflection {
 
         match self {
             Diffuse => true,
-            Glossy(_) => true,
             _ => false,
         }
     }

@@ -94,7 +94,7 @@ impl Renderer {
             // NEE
             if let Some((sample_point, sample_point_normal, light)) = scene.sample_on_lights() {
                 let shadow_dir = V3U::from_v3(sample_point - hit.position);
-                // 反射面がDiffuseでないとき(= Specular, Refraction)のときは寄与を計算しない
+                // 反射面がDiffuseでないときのときは寄与を計算しない
                 // 本来はBSDFを考慮すべき
                 let object = scene
                     .intersect(&Ray {

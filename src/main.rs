@@ -116,8 +116,94 @@ fn cornell_box() -> renderer::Scene {
     ])
 }
 
+fn mis_example() -> renderer::Scene {
+    renderer::Scene::new(vec![
+        renderer::Object {
+            figure: renderer::Figure::Sphere(renderer::Sphere {
+                center: V3::new(0.0, 0.0, 0.0),
+                radius: 500.0,
+            }),
+            color: Color::new(0.75, 0.75, 0.75),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(-50.0, 70.0, -60.0),
+                a: V3::new(200.0, 0.0, 0.0),
+                b: V3::new(0.0, -25.0, 10.0),
+            }),
+            color: Color::new(0.75, 0.75, 0.75),
+            reflection: Reflection::Glossy(0.05),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(-50.0, 40.0, -40.0),
+                a: V3::new(200.0, 0.0, 0.0),
+                b: V3::new(0.0, -20.0, 15.0),
+            }),
+            color: Color::new(0.75, 0.75, 0.75),
+            reflection: Reflection::Glossy(0.1),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(-50.0, 15.0, -10.0),
+                a: V3::new(200.0, 0.0, 0.0),
+                b: V3::new(0.0, -15.0, 20.0),
+            }),
+            color: Color::new(0.75, 0.75, 0.75),
+            reflection: Reflection::Glossy(0.25),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(-50.0, -5.0, 20.0),
+                a: V3::new(200.0, 0.0, 0.0),
+                b: V3::new(0.0, -10.0, 25.0),
+            }),
+            color: Color::new(0.75, 0.75, 0.75),
+            reflection: Reflection::Glossy(0.5),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Sphere(renderer::Sphere {
+                center: V3::new(-50.0, 110.0, -10.0),
+                radius: 0.5,
+            }),
+            emission: Color::new(900.0, 0.5, 0.5),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Sphere(renderer::Sphere {
+                center: V3::new(10.0, 110.0, -10.0),
+                radius: 2.0,
+            }),
+            emission: Color::new(100.0, 100.0, 0.5),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Sphere(renderer::Sphere {
+                center: V3::new(70.0, 110.0, -10.0),
+                radius: 10.0,
+            }),
+            emission: Color::new(1.0, 2.0, 1.0),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Sphere(renderer::Sphere {
+                center: V3::new(150.0, 110.0, -10.0),
+                radius: 25.0,
+            }),
+            emission: Color::new(0.5, 1.5, 2.0),
+            ..Default::default()
+        },
+    ])
+}
+
 fn main() {
     let scene = cornell_box();
+    let scene = mis_example();
     let renderer = Renderer {
         width: 640,
         height: 480,
