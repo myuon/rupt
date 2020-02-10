@@ -104,8 +104,7 @@ impl Renderer {
                     .unwrap()
                     .1;
                 if object == light && target.reflection.is_nee_target() {
-                    // BSDFはDiffuse面の場合は等しくρ/π
-                    let fs = target.color.scale(1.0 / std::f64::consts::PI);
+                    let fs = target.reflection.bsdf(shadow_dir, target.color);
                     let pa = light.pdf();
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()

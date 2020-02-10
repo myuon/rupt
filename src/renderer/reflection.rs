@@ -1,5 +1,9 @@
 use crate::renderer::HitRecord;
-use crate::wrapper::{ray::Ray, vec::V3U};
+use crate::wrapper::{
+    color::Color,
+    ray::Ray,
+    vec::{V3, V3U},
+};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Reflection {
@@ -40,6 +44,16 @@ impl Reflection {
         match self {
             Diffuse => true,
             _ => false,
+        }
+    }
+
+    pub fn bsdf(&self, dir: V3U, color: Color) -> Color {
+        use Reflection::*;
+
+        match self {
+            // BSDFはDiffuse面の場合は等しくρ/π
+            Diffuse => color.scale(1.0 / std::f64::consts::PI),
+            _ => Color::black(),
         }
     }
 
