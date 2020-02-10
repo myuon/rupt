@@ -9,7 +9,17 @@ use crate::wrapper::{
 pub struct HitRecord {
     pub distance: f64,
     pub position: V3,
+    // this is guaranteed to be an orienting normal
     pub normal: V3U,
+    // 光がオブジェクトの中に入る動きかそうでないかの判断
+    // これは実質Sphereでしか動かない(がRhombusでRefractionしないと思うので別にそれでも良い気がする…)
+    pub is_into: bool,
+}
+
+impl HitRecord {
+    pub fn reflected_dir(&self, incoming: V3U) -> V3U {
+        V3U::from_v3(incoming.as_v3() + self.normal.scale(2.0 * self.normal.dot(&incoming)))
+    }
 }
 
 mod rhombus;
@@ -135,6 +145,26 @@ impl Object {
                     .sum::<f64>()
                     / figs.len() as f64
             }
+        }
+    }
+
+    pub fn bsdf(&self, specular_angle_cosine: f64) -> Color {
+        use Reflection::*;
+
+        match &self.reflection {
+            // BSDFはDiffuse面の場合は等しくρ/π
+            Diffuse => self.color.scale(1.0 / std::f64::consts::PI),
+            Phong(params) => {
+                self.color
+                    .scale(1.0 / 2.0)
+                    .scale(1.0 / std::f64::consts::PI)
+                    + self.color.scale(1.0 / 2.0).scale(
+                        (params.exponent as f64 + 2.0)
+                            * specular_angle_cosine.powi(params.exponent)
+                            / (2.0 * std::f64::consts::PI),
+                    )
+            }
+            _ => Color::black(),
         }
     }
 }

@@ -1,16 +1,20 @@
 use crate::renderer::HitRecord;
-use crate::wrapper::{
-    color::Color,
-    ray::Ray,
-    vec::{V3, V3U},
-};
+use crate::wrapper::{ray::Ray, vec::V3U};
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct PhongParameter {
+    pub diffuse_reflectivity: f64,
+    pub specular_reflectivity: f64,
+    pub exponent: i32,
+}
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Reflection {
     Diffuse,
     Specular,
     Refraction,
-    Glossy(f64),
+    Glossy(f64),           // primitive glossy surface
+    Phong(PhongParameter), // glossy surface based on Phong model
 }
 
 impl Default for Reflection {
@@ -47,30 +51,14 @@ impl Reflection {
         }
     }
 
-    pub fn bsdf(&self, dir: V3U, color: Color) -> Color {
-        use Reflection::*;
-
-        match self {
-            // BSDFはDiffuse面の場合は等しくρ/π
-            Diffuse => color.scale(1.0 / std::f64::consts::PI),
-            _ => Color::black(),
-        }
-    }
-
     pub fn reflected(&self, ray: &Ray, hit: &HitRecord) -> Reflected {
-        let orienting_normal = if hit.normal.dot(&ray.dir) < 0.0 {
-            hit.normal
-        } else {
-            hit.normal.neg()
-        };
-
         let specular_ray = Ray {
             origin: hit.position,
             dir: V3U::from_v3(ray.dir.as_v3() - hit.normal.scale(2.0 * hit.normal.dot(&ray.dir))),
         };
 
         let diffuse_ray = {
-            let w = orienting_normal;
+            let w = hit.normal;
             let u = if w.x().abs() > EPS {
                 V3U::from_v3(V3U::unit_y().as_v3().cross(w.as_v3()))
             } else {
@@ -102,12 +90,10 @@ impl Reflection {
                 Reflected::new(specular_ray_mut)
             }
             Reflection::Refraction => {
-                let is_into = hit.normal.dot(&orienting_normal) > 0.0;
-
                 let nc = 1.0; // 真空の屈折率
                 let nt = 1.5; // このオブジェクトの屈折率
-                let nnt = if is_into { nc / nt } else { nt / nc };
-                let d = ray.dir.dot(&orienting_normal);
+                let nnt = if hit.is_into { nc / nt } else { nt / nc };
+                let d = ray.dir.dot(&hit.normal);
                 let cos2t = 1.0 - nnt * nnt * (1.0 - d * d);
 
                 // 全反射
@@ -118,10 +104,7 @@ impl Reflection {
                 let refraction_ray = Ray {
                     origin: hit.position,
                     dir: V3U::from_v3(
-                        ray.dir.scale(nnt)
-                            - hit.normal.scale(
-                                (if is_into { 1.0 } else { -1.0 }) * (d * nnt + cos2t.sqrt()),
-                            ),
+                        ray.dir.scale(nnt) - hit.normal.scale(d * nnt + cos2t.sqrt()),
                     ),
                 };
 
@@ -131,10 +114,10 @@ impl Reflection {
                 let b = nt + nc;
                 let r0 = (a * a) / (b * b);
                 let c = 1.0
-                    - (if is_into {
+                    - (if hit.is_into {
                         -d
                     } else {
-                        refraction_ray.dir.dot(&orienting_normal.neg())
+                        refraction_ray.dir.dot(&hit.normal.neg())
                     });
 
                 // 反射光の寄与
@@ -161,6 +144,7 @@ impl Reflection {
                     }
                 }
             }
+            Reflection::Phong(_) => unimplemented!(),
         }
     }
 }

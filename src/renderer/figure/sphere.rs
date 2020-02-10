@@ -33,11 +33,13 @@ impl Sphere {
         let dist = if sol1 > EPS { sol1 } else { sol2 };
         let pos = ray.extend_at(dist);
         let normal = V3U::from_v3(pos.clone() - self.center.clone());
+        let orienting_normal = normal.flip_if_close(&ray.dir);
 
         Some(HitRecord {
             distance: dist,
             position: pos,
-            normal,
+            normal: orienting_normal,
+            is_into: normal.dot(&orienting_normal) > 0.0,
         })
     }
 
@@ -83,6 +85,7 @@ fn intersect_sphere_example() {
             distance: 4.0,
             normal: V3U::from_v3_unsafe(V3::new(0.0, -1.0, 0.0)),
             position: V3::new(0.0, 4.0, 0.0),
+            is_into: true,
         }
     );
 }
@@ -106,9 +109,9 @@ fn intersect_sphere_from_interior() {
         hit.unwrap(),
         HitRecord {
             distance: 10.0,
-            // 内側から衝突した場合でも法線は常に中心から外向きであることに注意
-            normal: V3U::from_v3_unsafe(V3::new(0.0, 0.0, 1.0)),
+            normal: V3U::from_v3_unsafe(V3::new(0.0, 0.0, -1.0)),
             position: V3::new(0.0, 0.0, 10.0),
+            is_into: false,
         }
     );
 }

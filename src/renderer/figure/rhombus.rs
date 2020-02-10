@@ -25,10 +25,13 @@ impl Rhombus {
             return None;
         }
 
+        let normal = V3U::from_v3(normal);
+
         Some(HitRecord {
             distance: t,
             position: p,
-            normal: V3U::from_v3(normal),
+            normal: normal.flip_if_close(&ray.dir),
+            is_into: false,
         })
     }
 
@@ -102,6 +105,7 @@ fn intersect_rhombus_example() {
             distance: 5.0,
             normal: V3U::from_v3_unsafe(V3::new(0.0, -1.0, 0.0)),
             position: V3::new(5.0, 5.0, 10.0),
+            is_into: false,
         }
     );
 

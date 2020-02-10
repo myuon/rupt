@@ -125,6 +125,14 @@ impl V3U {
     pub fn neg(self) -> Self {
         V3U(self.0.scale(-1.0))
     }
+
+    pub fn flip_if_close(self, target: &V3U) -> V3U {
+        if self.dot(&target) < 0.0 {
+            self
+        } else {
+            self.neg()
+        }
+    }
 }
 
 #[cfg(test)]

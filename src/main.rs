@@ -203,7 +203,7 @@ fn mis_example() -> renderer::Scene {
 
 fn main() {
     let scene = cornell_box();
-    let scene = mis_example();
+    //let scene = mis_example();
     let renderer = Renderer {
         width: 640,
         height: 480,

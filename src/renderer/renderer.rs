@@ -104,7 +104,7 @@ impl Renderer {
                     .unwrap()
                     .1;
                 if object == light && target.reflection.is_nee_target() {
-                    let fs = target.reflection.bsdf(shadow_dir, target.color);
+                    let fs = target.bsdf(0.0);
                     let pa = light.pdf();
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
