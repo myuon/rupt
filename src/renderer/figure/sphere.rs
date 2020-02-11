@@ -1,4 +1,4 @@
-use crate::renderer::HitRecord;
+use crate::renderer::{HitRecord, SampleRecord};
 use crate::wrapper::{
     ray::Ray,
     vec::{V3, V3U},
@@ -43,7 +43,7 @@ impl Sphere {
         })
     }
 
-    pub fn sample(&self) -> (V3, V3U) {
+    pub fn sample(&self) -> SampleRecord {
         loop {
             let x = rand::random::<f64>();
             let y = rand::random::<f64>();
@@ -51,16 +51,13 @@ impl Sphere {
             let v = V3::new(x, y, z);
 
             if v.len_square() <= 1.0 {
-                return (
-                    v.scale(self.radius) + self.center,
-                    V3U::from_v3(v - self.center),
-                );
+                return SampleRecord {
+                    point: v.scale(self.radius) + self.center,
+                    normal: V3U::from_v3(v - self.center),
+                    pdf_value: 1.0 / (4.0 * std::f64::consts::PI * self.radius * self.radius),
+                };
             }
         }
-    }
-
-    pub fn pdf(&self) -> f64 {
-        1.0 / (4.0 * std::f64::consts::PI * self.radius * self.radius)
     }
 }
 

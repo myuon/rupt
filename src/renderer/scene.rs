@@ -1,9 +1,5 @@
-use crate::renderer::{HitRecord, Object};
-use crate::wrapper::{
-    color::Color,
-    ray::Ray,
-    vec::{V3, V3U},
-};
+use crate::renderer::{HitRecord, Object, SampleRecord};
+use crate::wrapper::{color::Color, ray::Ray};
 
 #[derive(Clone)]
 pub struct Scene {
@@ -45,13 +41,13 @@ impl Scene {
     }
 
     // returns point, normal, reference to object
-    pub fn sample_on_lights(&self) -> Option<(V3, V3U, &Object)> {
+    pub fn sample_on_lights(&self) -> Option<(SampleRecord, &Object)> {
         if self.lights.is_empty() {
             return None;
         }
 
         let i = rand::random::<usize>() % self.lights.len();
-        let (p, n) = self.objects[self.lights[i]].sample();
-        Some((p, n, &self.objects[self.lights[i]]))
+        let sr = self.objects[self.lights[i]].sample();
+        Some((sr, &self.objects[self.lights[i]]))
     }
 }

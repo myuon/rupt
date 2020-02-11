@@ -1,4 +1,4 @@
-use crate::renderer::HitRecord;
+use crate::renderer::{HitRecord, SampleRecord};
 use crate::wrapper::{
     ray::Ray,
     vec::{V3, V3U},
@@ -49,18 +49,15 @@ impl Rhombus {
             && crosses[0].dot(&crosses[3]) > 0.0
     }
 
-    pub fn sample(&self) -> (V3, V3U) {
+    pub fn sample(&self) -> SampleRecord {
         let x = rand::random::<f64>();
         let y = rand::random::<f64>();
 
-        (
-            self.origin + self.a.scale(x) + self.b.scale(y),
-            V3U::from_v3(self.a.cross(self.b)),
-        )
-    }
-
-    pub fn pdf(&self) -> f64 {
-        1.0 / (self.a.cross(self.b).len())
+        SampleRecord {
+            point: self.origin + self.a.scale(x) + self.b.scale(y),
+            normal: V3U::from_v3(self.a.cross(self.b)),
+            pdf_value: 1.0 / (self.a.cross(self.b).len()),
+        }
     }
 
     // order: x0, x1, y0, y1
@@ -156,7 +153,7 @@ mod tests {
 
     #[quickcheck]
     fn sample_in_rhombus(rect: Rhombus) -> bool {
-        let (p, _) = rect.sample();
-        rect.has(&p)
+        let sample = rect.sample();
+        rect.has(&sample.point)
     }
 }

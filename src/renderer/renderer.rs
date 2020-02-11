@@ -92,9 +92,9 @@ impl Renderer {
             let mut rad = Color::black();
 
             // NEE
-            if let Some((sample_point, sample_point_normal, light)) = scene.sample_on_lights() {
+            if let Some((sample, light)) = scene.sample_on_lights() {
                 // 衝突点から光源点への向き
-                let shadow_dir = V3U::from_v3(sample_point - hit.position);
+                let shadow_dir = V3U::from_v3(sample.point - hit.position);
 
                 // 反射面がDiffuseでないときのときは寄与を計算しない
                 // 本来はBSDFを考慮すべき
@@ -108,13 +108,15 @@ impl Renderer {
                 if object == light && target.reflection.is_nee_target() {
                     let specular_angle_cosine = hit.reflected_dir(ray.dir).dot(&shadow_dir);
                     let fs = target.bsdf(specular_angle_cosine);
-                    // sample_on_lightsで取得するべき
-                    let pa = light.pdf();
+
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
-                        * shadow_dir.neg().dot(&sample_point_normal).abs()
-                        / (sample_point - hit.position).len_square();
-                    rad += fs.blend(light.emission).scale(g / pa).scale(1.0 / q);
+                        * shadow_dir.neg().dot(&sample.normal).abs()
+                        / (sample.point - hit.position).len_square();
+                    rad += fs
+                        .blend(light.emission)
+                        .scale(g / sample.pdf_value)
+                        .scale(1.0 / q);
                 }
             }
 

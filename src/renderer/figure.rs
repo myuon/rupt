@@ -22,6 +22,13 @@ impl HitRecord {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct SampleRecord {
+    pub point: V3,
+    pub normal: V3U,
+    pub pdf_value: f64,
+}
+
 mod rhombus;
 mod sphere;
 
@@ -106,7 +113,7 @@ impl Object {
         }
     }
 
-    pub fn sample(&self) -> (V3, V3U) {
+    pub fn sample(&self) -> SampleRecord {
         use Figure::*;
 
         match &self.figure {
@@ -125,51 +132,20 @@ impl Object {
         }
     }
 
-    pub fn pdf(&self) -> f64 {
-        use Figure::*;
-
-        match &self.figure {
-            Rhombus(r) => r.pdf(),
-            Sphere(r) => r.pdf(),
-            Figures(figs) => {
-                figs.iter()
-                    .map(|fig| {
-                        Object {
-                            figure: fig.clone(),
-                            emission: self.emission,
-                            color: self.color,
-                            reflection: self.reflection.clone(),
-                        }
-                        .pdf()
-                    })
-                    .sum::<f64>()
-                    / figs.len() as f64
-            }
-        }
-    }
-
     pub fn bsdf(&self, specular_angle_cosine: f64) -> Color {
         use Reflection::*;
 
         match &self.reflection {
             // BSDFはDiffuse面の場合は等しくρ/π
             Diffuse => self.color.scale(1.0 / std::f64::consts::PI),
-            Phong(params) => self
-                .color
-                .scale(
-                    (params.diffuse_reflectivity / std::f64::consts::PI)
-                        + (params.specular_reflectivity
-                            * (params.exponent as f64 + 2.0)
-                            * specular_angle_cosine.powi(params.exponent))
-                            / (2.0 * std::f64::consts::PI),
-                )
-                // FIXME: 一旦pdfをここで計算してしまう
-                .scale(
-                    1.0 / ((params.exponent as f64 + 2.0)
-                        * specular_angle_cosine.powi(params.exponent)
-                        / (2.0 * std::f64::consts::PI)),
-                ),
-            _ => Color::black(),
+            Phong(params) => self.color.scale(
+                (params.diffuse_reflectivity / std::f64::consts::PI)
+                    + (params.specular_reflectivity
+                        * (params.exponent as f64 + 2.0)
+                        * specular_angle_cosine.powi(params.exponent))
+                        / (2.0 * std::f64::consts::PI),
+            ),
+            _ => self.color,
         }
     }
 }
