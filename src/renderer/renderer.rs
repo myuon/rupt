@@ -108,6 +108,7 @@ impl Renderer {
                 if object == light && target.reflection.is_nee_target() {
                     let specular_angle_cosine = hit.reflected_dir(ray.dir).dot(&shadow_dir);
                     let fs = target.bsdf(specular_angle_cosine);
+                    // sample_on_lightsで取得するべき
                     let pa = light.pdf();
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
@@ -139,9 +140,9 @@ impl Renderer {
                 .scale(reflected.contribution);
 
             rad += target.emission
-                + target
-                    .color
-                    .scale(1.0 / (q * reflected.rr_prob))
+                + (target.color)
+                    .scale(reflected.ray.dir.dot(&hit.normal).abs())
+                    .scale(1.0 / (q * reflected.pdf_value))
                     .blend(next_radience);
 
             rad

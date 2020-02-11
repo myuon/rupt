@@ -29,15 +29,15 @@ const EPS: f64 = 0.0001;
 pub struct Reflected {
     pub ray: Ray,
     pub contribution: f64,
-    pub rr_prob: f64,
+    pub pdf_value: f64,
 }
 
 impl Reflected {
-    pub fn new(ray: Ray) -> Reflected {
+    pub fn new(ray: Ray, pdf_value: f64) -> Reflected {
         Reflected {
             ray,
             contribution: 1.0,
-            rr_prob: 1.0,
+            pdf_value,
         }
     }
 }
@@ -47,8 +47,8 @@ impl Reflection {
         use Reflection::*;
 
         match self {
-            Diffuse => true,
-            Phong(_) => true,
+            Diffuse => false,
+            Phong(_) => false,
             _ => false,
         }
     }
@@ -83,14 +83,15 @@ impl Reflection {
         };
 
         match self {
-            Reflection::Diffuse => Reflected::new(diffuse_ray),
-            Reflection::Specular => Reflected::new(specular_ray),
+            Reflection::Diffuse => Reflected::new(diffuse_ray, 1.0 / (4.0 * std::f64::consts::PI)),
+            Reflection::Specular => Reflected::new(specular_ray, 1.0),
             Reflection::Glossy(r) => {
                 let mut specular_ray_mut = specular_ray;
                 specular_ray_mut.dir =
                     V3U::from_v3(specular_ray_mut.dir.as_v3() + diffuse_ray.dir.as_v3().scale(*r));
 
-                Reflected::new(specular_ray_mut)
+                // これはウソ(scatter rayの選び方が適当なのでpdfよくわからない)
+                Reflected::new(specular_ray_mut, 0.75)
             }
             Reflection::Refraction => {
                 let nc = 1.0; // 真空の屈折率
@@ -101,7 +102,7 @@ impl Reflection {
 
                 // 全反射
                 if cos2t < 0.0 {
-                    return Reflected::new(specular_ray);
+                    return Reflected::new(specular_ray, 1.0);
                 }
 
                 let refraction_ray = Ray {
@@ -137,13 +138,13 @@ impl Reflection {
                     Reflected {
                         ray: specular_ray,
                         contribution: re,
-                        rr_prob: q,
+                        pdf_value: q,
                     }
                 } else {
                     Reflected {
                         ray: refraction_ray,
                         contribution: tr,
-                        rr_prob: 1.0 - q,
+                        pdf_value: 1.0 - q,
                     }
                 }
             }
@@ -155,21 +156,30 @@ impl Reflection {
 
                 let xi = rand::random::<f64>();
                 if xi < params.diffuse_reflectivity {
-                    Reflected::new(diffuse_ray)
+                    Reflected::new(diffuse_ray, params.diffuse_reflectivity)
                 } else if xi < params.diffuse_reflectivity + params.specular_reflectivity {
-                    // speculara lobe sampling
+                    // specular lobe sampling
                     let r1 = 2.0 * std::f64::consts::PI * rand::random::<f64>();
                     let r2 = rand::random::<f64>();
                     let t = r2.powf(2.0 / (params.exponent as f64 + 1.0));
 
-                    Reflected::new(Ray {
-                        origin: hit.position,
-                        dir: V3U::from_v3(
-                            u.scale(r1.cos() * (1.0 - t).sqrt())
-                                + v.scale(r1.sin() * (1.0 - t).sqrt())
-                                + w.scale(t.sqrt()),
-                        ),
-                    })
+                    let phong_reflect_dir = V3U::from_v3(
+                        u.scale(r1.cos() * (1.0 - t).sqrt())
+                            + v.scale(r1.sin() * (1.0 - t).sqrt())
+                            + w.scale(t.sqrt()),
+                    );
+
+                    let specular_angle_cosine = hit.reflected_dir(ray.dir).dot(&phong_reflect_dir);
+
+                    Reflected::new(
+                        Ray {
+                            origin: hit.position,
+                            dir: phong_reflect_dir,
+                        },
+                        (params.exponent as f64 + 2.0)
+                            * specular_angle_cosine.powi(params.exponent)
+                            / (2.0 * std::f64::consts::PI),
+                    )
                 } else {
                     Reflected {
                         contribution: 0.0,
