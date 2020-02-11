@@ -25,6 +25,7 @@ impl Default for Reflection {
 
 const EPS: f64 = 0.0001;
 
+#[derive(Default)]
 pub struct Reflected {
     pub ray: Ray,
     pub contribution: f64,
@@ -47,6 +48,7 @@ impl Reflection {
 
         match self {
             Diffuse => true,
+            Phong(_) => true,
             _ => false,
         }
     }
@@ -57,15 +59,16 @@ impl Reflection {
             dir: hit.reflected_dir(ray.dir),
         };
 
-        let diffuse_ray = {
-            let w = hit.normal;
-            let u = if w.x().abs() > EPS {
-                V3U::from_v3(V3U::unit_y().as_v3().cross(w.as_v3()))
-            } else {
-                V3U::from_v3(V3U::unit_x().as_v3().cross(w.as_v3()))
-            };
-            let v = w.as_v3().cross(u.as_v3());
+        // 反射面に対する半球座標系
+        let w = hit.normal;
+        let u = if w.x().abs() > EPS {
+            V3U::from_v3(V3U::unit_y().as_v3().cross(w.as_v3()))
+        } else {
+            V3U::from_v3(V3U::unit_x().as_v3().cross(w.as_v3()))
+        };
+        let v = w.as_v3().cross(u.as_v3());
 
+        let diffuse_ray = {
             // 半球に沿ったimportance sampling
             let r1 = 2.0 * std::f64::consts::PI * rand::random::<f64>();
             let r2 = rand::random::<f64>();
@@ -144,7 +147,36 @@ impl Reflection {
                     }
                 }
             }
-            Reflection::Phong(_) => unimplemented!(),
+            Reflection::Phong(params) => {
+                // diffuseをとるかspecularをとるかをランダムに決定する(contributionがない場合もある)
+                if params.diffuse_reflectivity + params.specular_reflectivity > 1.0 {
+                    unreachable!()
+                }
+
+                let xi = rand::random::<f64>();
+                if xi < params.diffuse_reflectivity {
+                    Reflected::new(diffuse_ray)
+                } else if xi < params.diffuse_reflectivity + params.specular_reflectivity {
+                    // speculara lobe sampling
+                    let r1 = 2.0 * std::f64::consts::PI * rand::random::<f64>();
+                    let r2 = rand::random::<f64>();
+                    let t = r2.powf(2.0 / (params.exponent as f64 + 1.0));
+
+                    Reflected::new(Ray {
+                        origin: hit.position,
+                        dir: V3U::from_v3(
+                            u.scale(r1.cos() * (1.0 - t).sqrt())
+                                + v.scale(r1.sin() * (1.0 - t).sqrt())
+                                + w.scale(t.sqrt()),
+                        ),
+                    })
+                } else {
+                    Reflected {
+                        contribution: 0.0,
+                        ..Default::default()
+                    }
+                }
+            }
         }
     }
 }

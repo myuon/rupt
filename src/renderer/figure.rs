@@ -154,16 +154,13 @@ impl Object {
         match &self.reflection {
             // BSDFはDiffuse面の場合は等しくρ/π
             Diffuse => self.color.scale(1.0 / std::f64::consts::PI),
-            Phong(params) => {
-                self.color
-                    .scale(1.0 / 2.0)
-                    .scale(1.0 / std::f64::consts::PI)
-                    + self.color.scale(1.0 / 2.0).scale(
-                        (params.exponent as f64 + 2.0)
-                            * specular_angle_cosine.powi(params.exponent)
-                            / (2.0 * std::f64::consts::PI),
-                    )
-            }
+            Phong(params) => self.color.scale(
+                (params.diffuse_reflectivity / std::f64::consts::PI)
+                    + (params.specular_reflectivity
+                        * (params.exponent as f64 + 2.0)
+                        * specular_angle_cosine.powi(params.exponent))
+                        / (2.0 * std::f64::consts::PI),
+            ),
             _ => Color::black(),
         }
     }

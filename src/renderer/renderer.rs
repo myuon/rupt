@@ -1,4 +1,4 @@
-use crate::renderer::{picture::Picture, reflection::Reflection, Scene};
+use crate::renderer::{picture::Picture, Scene};
 use crate::wrapper::{
     color::Color,
     ray::Ray,
@@ -93,7 +93,9 @@ impl Renderer {
 
             // NEE
             if let Some((sample_point, sample_point_normal, light)) = scene.sample_on_lights() {
+                // 衝突点から光源点への向き
                 let shadow_dir = V3U::from_v3(sample_point - hit.position);
+
                 // 反射面がDiffuseでないときのときは寄与を計算しない
                 // 本来はBSDFを考慮すべき
                 let object = scene
@@ -104,7 +106,8 @@ impl Renderer {
                     .unwrap()
                     .1;
                 if object == light && target.reflection.is_nee_target() {
-                    let fs = target.bsdf(0.0);
+                    let specular_angle_cosine = hit.reflected_dir(ray.dir).dot(&shadow_dir);
+                    let fs = target.bsdf(specular_angle_cosine);
                     let pa = light.pdf();
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
