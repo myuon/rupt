@@ -41,12 +41,12 @@ fn cornell_box() -> renderer::Scene {
                 b: V3::new(0.0, height, 0.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
-            reflection: Reflection::Glossy(0.01),
+            reflection: Reflection::Glossy(0.3),
             /*
             reflection: Reflection::Phong(renderer::PhongParameter {
-                diffuse_reflectivity: 0.001,
-                specular_reflectivity: 0.001,
-                exponent: 0,
+                diffuse_reflectivity: 0.1,
+                specular_reflectivity: 0.5,
+                exponent: 100,
             }),
             */
             ..Default::default()
@@ -117,7 +117,7 @@ fn cornell_box() -> renderer::Scene {
                 a: V3::new(15.0, 0.0, 0.0),
                 b: V3::new(0.0, 0.0, 15.0),
             }),
-            emission: Color::new(50.0, 50.0, 50.0),
+            emission: Color::new(5.0, 5.0, 5.0),
             ..Default::default()
         },
     ])

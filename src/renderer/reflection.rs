@@ -47,8 +47,8 @@ impl Reflection {
         use Reflection::*;
 
         match self {
-            Diffuse => false,
-            Phong(_) => false,
+            Diffuse => true,
+            Phong(_) => true,
             _ => false,
         }
     }
@@ -183,6 +183,7 @@ impl Reflection {
                 } else {
                     Reflected {
                         contribution: 0.0,
+                        pdf_value: 1.0,
                         ..Default::default()
                     }
                 }
