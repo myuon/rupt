@@ -83,7 +83,11 @@ impl Reflection {
         };
 
         match self {
-            Reflection::Diffuse => Reflected::new(diffuse_ray, 1.0 / (4.0 * std::f64::consts::PI)),
+            // Diffuseでは入射角のcosine値/πに沿ったimportance samplingを行っているのでそれがpdfとなる
+            Reflection::Diffuse => {
+                let cosine_value = diffuse_ray.dir.dot(&hit.normal).abs();
+                Reflected::new(diffuse_ray, cosine_value / std::f64::consts::PI)
+            }
             Reflection::Specular => Reflected::new(specular_ray, 1.0),
             Reflection::Glossy(r) => {
                 let mut specular_ray_mut = specular_ray;

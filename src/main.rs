@@ -117,7 +117,7 @@ fn cornell_box() -> renderer::Scene {
                 a: V3::new(15.0, 0.0, 0.0),
                 b: V3::new(0.0, 0.0, 15.0),
             }),
-            emission: Color::new(5.0, 5.0, 5.0),
+            emission: Color::new(50.0, 50.0, 50.0),
             ..Default::default()
         },
     ])
