@@ -83,12 +83,16 @@ impl Reflection {
         };
 
         match self {
-            // Diffuseでは入射角のcosine値/πに沿ったimportance samplingを行っているのでそれがpdfとなる
             Reflection::Diffuse => {
+                // Diffuseでは入射角のcosine値/πに沿ったimportance samplingを行っているのでそれがpdfとなる
                 let cosine_value = diffuse_ray.dir.dot(&hit.normal).abs();
                 Reflected::new(diffuse_ray, cosine_value / std::f64::consts::PI)
             }
-            Reflection::Specular => Reflected::new(specular_ray, 1.0),
+            Reflection::Specular => {
+                // Specular面のpdfはデルタ関数を含むがそれは表現できないこととBSDFのデルタ関数とキャンセルするのでここでは単にcosine値とする
+                let cosine_value = specular_ray.dir.dot(&hit.normal).abs();
+                Reflected::new(specular_ray, cosine_value)
+            }
             Reflection::Glossy(r) => {
                 let mut specular_ray_mut = specular_ray;
                 specular_ray_mut.dir =
@@ -139,16 +143,18 @@ impl Reflection {
 
                 // 反射
                 if r < q {
+                    let cosine_value = specular_ray.dir.dot(&hit.normal).abs();
                     Reflected {
                         ray: specular_ray,
                         contribution: re,
-                        pdf_value: q,
+                        pdf_value: q * cosine_value,
                     }
                 } else {
+                    let cosine_value = refraction_ray.dir.dot(&hit.normal).abs();
                     Reflected {
                         ray: refraction_ray,
                         contribution: tr,
-                        pdf_value: 1.0 - q,
+                        pdf_value: (1.0 - q) * cosine_value,
                     }
                 }
             }
