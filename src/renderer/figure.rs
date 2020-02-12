@@ -131,23 +131,4 @@ impl Object {
             }
         }
     }
-
-    pub fn bsdf(&self, specular_angle_cosine: f64) -> Color {
-        use Reflection::*;
-
-        let k = match &self.reflection {
-            // BSDFはDiffuse面の場合は等しくρ/π
-            Diffuse => 1.0 / std::f64::consts::PI,
-            Phong(params) => {
-                (params.diffuse_reflectivity / std::f64::consts::PI)
-                    + (params.specular_reflectivity
-                        * (params.exponent as f64 + 2.0)
-                        * specular_angle_cosine.powi(params.exponent))
-                        / (2.0 * std::f64::consts::PI)
-            }
-            _ => 1.0,
-        };
-
-        self.color.scale(k)
-    }
 }

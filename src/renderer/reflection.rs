@@ -29,15 +29,15 @@ const EPS: f64 = 0.0001;
 pub struct Reflected {
     pub ray: Ray,
     pub contribution: f64,
-    pub pdf_value: f64,
+    pub weight: f64, // BSDF*cos(θ)/PDFの値(ただし反射率は別で計算される(データの持ち方の都合上…))
 }
 
 impl Reflected {
-    pub fn new(ray: Ray, pdf_value: f64) -> Reflected {
+    pub fn new(ray: Ray, weight: f64) -> Reflected {
         Reflected {
             ray,
             contribution: 1.0,
-            pdf_value,
+            weight,
         }
     }
 }
@@ -50,6 +50,16 @@ impl Reflection {
             Diffuse => true,
             Phong(_) => true,
             _ => false,
+        }
+    }
+
+    // NEE用にBSDFを計算する(反射率は除く)
+    pub fn nee_bsdf_weight(&self) -> f64 {
+        use Reflection::*;
+
+        match self {
+            Diffuse => 1.0 / std::f64::consts::PI,
+            _ => unreachable!(),
         }
     }
 
@@ -85,21 +95,19 @@ impl Reflection {
         match self {
             Reflection::Diffuse => {
                 // Diffuseでは入射角のcosine値/πに沿ったimportance samplingを行っているのでそれがpdfとなる
-                let cosine_value = diffuse_ray.dir.dot(&hit.normal).abs();
-                Reflected::new(diffuse_ray, cosine_value / std::f64::consts::PI)
+                // Diffuse面でのBSDFはρ/πでpdfはcos(θ)/πなのでweight = BSDF・cos(θ)/ρ・pdf = 1
+                Reflected::new(diffuse_ray, 1.0)
             }
-            Reflection::Specular => {
-                // Specular面のpdfはデルタ関数を含むがそれは表現できないこととBSDFのデルタ関数とキャンセルするのでここでは単にcosine値とする
-                let cosine_value = specular_ray.dir.dot(&hit.normal).abs();
-                Reflected::new(specular_ray, cosine_value)
-            }
+            Reflection::Specular => Reflected::new(specular_ray, 1.0),
             Reflection::Glossy(r) => {
                 let mut specular_ray_mut = specular_ray;
                 specular_ray_mut.dir =
                     V3U::from_v3(specular_ray_mut.dir.as_v3() + diffuse_ray.dir.as_v3().scale(*r));
 
-                // これはウソ(scatter rayの選び方が適当なのでpdfよくわからない)
-                Reflected::new(specular_ray_mut, 0.75)
+                let specular_angle_cosine = specular_ray_mut.dir.dot(&hit.normal).abs();
+
+                // これはウソ(scatter rayの選び方が適当なのでpdfよくわからないがspecular rayとのcosine値から適当に計算しておく)
+                Reflected::new(specular_ray_mut, 1.0 / specular_angle_cosine)
             }
             Reflection::Refraction => {
                 let nc = 1.0; // 真空の屈折率
@@ -143,18 +151,16 @@ impl Reflection {
 
                 // 反射
                 if r < q {
-                    let cosine_value = specular_ray.dir.dot(&hit.normal).abs();
                     Reflected {
                         ray: specular_ray,
                         contribution: re,
-                        pdf_value: q * cosine_value,
+                        weight: 1.0 / q,
                     }
                 } else {
-                    let cosine_value = refraction_ray.dir.dot(&hit.normal).abs();
                     Reflected {
                         ray: refraction_ray,
                         contribution: tr,
-                        pdf_value: (1.0 - q) * cosine_value,
+                        weight: 1.0 / (1.0 - q),
                     }
                 }
             }
@@ -193,7 +199,7 @@ impl Reflection {
                 } else {
                     Reflected {
                         contribution: 0.0,
-                        pdf_value: 1.0,
+                        weight: 0.0,
                         ..Default::default()
                     }
                 }

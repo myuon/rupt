@@ -106,12 +106,12 @@ impl Renderer {
                     .unwrap()
                     .1;
                 if object == light && target.reflection.is_nee_target() {
-                    let specular_angle_cosine = hit.reflected_dir(ray.dir).dot(&shadow_dir);
                     // 幾何項
                     let g = shadow_dir.dot(&hit.normal).abs()
                         * shadow_dir.neg().dot(&sample.normal).abs()
                         / (sample.point - hit.position).len_square();
-                    rad += (target.bsdf(specular_angle_cosine))
+                    rad += (target.color)
+                        .scale(target.reflection.nee_bsdf_weight())
                         .blend(light.emission)
                         .scale(g / (q * sample.pdf_value));
                 }
@@ -138,11 +138,9 @@ impl Renderer {
                 )
                 .scale(reflected.contribution);
 
-            let specular_angle_cosine = hit.reflected_dir(ray.dir).dot(&reflected.ray.dir);
             rad += target.emission
-                + (target.bsdf(specular_angle_cosine))
-                    .scale(reflected.ray.dir.dot(&hit.normal).abs())
-                    .scale(1.0 / (q * reflected.pdf_value))
+                + (target.color)
+                    .scale(reflected.weight / q)
                     .blend(next_radience);
 
             rad
