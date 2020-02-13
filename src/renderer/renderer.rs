@@ -111,7 +111,7 @@ impl Renderer {
                         * shadow_dir.neg().dot(&sample.normal).abs()
                         / (sample.point - hit.position).len_square();
                     rad += (target.color)
-                        .scale(target.reflection.nee_bsdf_weight())
+                        .scale(target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir))
                         .blend(light.emission)
                         .scale(g / (q * sample.pdf_value));
                 }

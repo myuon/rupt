@@ -8,6 +8,22 @@ pub struct PhongParameter {
     pub exponent: i32,
 }
 
+impl PhongParameter {
+    pub fn bsdf(&self, cosine_value: f64) -> f64 {
+        self.diffuse_reflectivity * self.diffuse_pdf(cosine_value)
+            + self.specular_reflectivity * self.specular_pdf(cosine_value)
+    }
+
+    pub fn diffuse_pdf(&self, _cosine_value: f64) -> f64 {
+        1.0 / std::f64::consts::PI
+    }
+
+    pub fn specular_pdf(&self, cosine_value: f64) -> f64 {
+        (self.exponent as f64 + 2.0) * cosine_value.powi(self.exponent)
+            / (2.0 * std::f64::consts::PI)
+    }
+}
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum Reflection {
     Diffuse,
@@ -54,11 +70,12 @@ impl Reflection {
     }
 
     // NEE用にBSDFを計算する(反射率は除く)
-    pub fn nee_bsdf_weight(&self) -> f64 {
+    pub fn nee_bsdf_weight(&self, ray: &Ray, hit: &HitRecord, light_dir: V3U) -> f64 {
         use Reflection::*;
 
         match self {
             Diffuse => 1.0 / std::f64::consts::PI,
+            Phong(params) => params.bsdf(hit.reflected_dir(ray.dir).dot(&light_dir)),
             _ => unreachable!(),
         }
     }
@@ -172,12 +189,16 @@ impl Reflection {
 
                 let xi = rand::random::<f64>();
                 if xi < params.diffuse_reflectivity {
-                    Reflected::new(diffuse_ray, params.diffuse_reflectivity)
+                    Reflected {
+                        ray: diffuse_ray,
+                        contribution: params.diffuse_reflectivity,
+                        weight: 1.0,
+                    }
                 } else if xi < params.diffuse_reflectivity + params.specular_reflectivity {
                     // specular lobe sampling
                     let r1 = 2.0 * std::f64::consts::PI * rand::random::<f64>();
                     let r2 = rand::random::<f64>();
-                    let t = r2.powf(2.0 / (params.exponent as f64 + 1.0));
+                    let t = r2.powf(1.0 / (params.exponent as f64 + 1.0));
 
                     let phong_reflect_dir = V3U::from_v3(
                         u.scale(r1.cos() * (1.0 - t).sqrt())
@@ -185,17 +206,14 @@ impl Reflection {
                             + w.scale(t.sqrt()),
                     );
 
-                    let specular_angle_cosine = hit.reflected_dir(ray.dir).dot(&phong_reflect_dir);
-
-                    Reflected::new(
-                        Ray {
+                    Reflected {
+                        ray: Ray {
                             origin: hit.position,
                             dir: phong_reflect_dir,
                         },
-                        (params.exponent as f64 + 2.0)
-                            * specular_angle_cosine.powi(params.exponent)
-                            / (2.0 * std::f64::consts::PI),
-                    )
+                        contribution: params.specular_reflectivity,
+                        weight: phong_reflect_dir.dot(&hit.normal),
+                    }
                 } else {
                     Reflected {
                         contribution: 0.0,

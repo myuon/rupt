@@ -6,3 +6,4 @@
 - http://kagamin.net/hole/edupt/
 - http://www.cim.mcgill.ca/~derek/ecse689.html
 - http://www.cs.uu.nl/docs/vakken/magr/2016-2017/slides/lecture%2013%20-%20BRDFs.pdf
+- https://www.cs.princeton.edu/courses/archive/fall16/cos526/papers/importance.pdf
