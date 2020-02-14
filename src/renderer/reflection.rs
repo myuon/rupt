@@ -71,14 +71,16 @@ impl Reflection {
         }
     }
 
-    // NEE用にBSDFを計算する(反射率は除く)
+    // NEE用に3点経路上のBSDFを計算する(反射率は除く)
     pub fn nee_bsdf_weight(&self, ray: &Ray, hit: &HitRecord, light_dir: V3U) -> f64 {
         use Reflection::*;
 
         match self {
             Diffuse => 1.0 / std::f64::consts::PI,
             Phong(params) => params.bsdf(hit.reflected_dir(ray.dir).dot(&light_dir)),
-            _ => unreachable!(),
+            Specular => 0.0,
+            Refraction => 0.0,
+            _ => unimplemented!(),
         }
     }
 

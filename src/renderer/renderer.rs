@@ -67,7 +67,7 @@ impl Renderer {
                         dir: V3U::from_v3(screen_position - world.camera.position),
                     };
 
-                    radience += self.radience(scene, &ray, 0, true);
+                    radience += self.radience(scene, &ray, 0, 1.0);
                 }
 
                 radience.scale(1.0 / self.spp as f64)
@@ -77,7 +77,7 @@ impl Renderer {
         Picture::new(pixels)
     }
 
-    fn radience(&self, scene: &Scene, ray: &Ray, depth: i32, is_previous_specular: bool) -> Color {
+    fn radience(&self, scene: &Scene, ray: &Ray, depth: i32, bsdf_pdf: f64) -> Color {
         if let Some((hit, target)) = scene.intersect(ray) {
             // Russian Roulette
             let r = rand::random::<f64>();
@@ -92,51 +92,37 @@ impl Renderer {
             let mut rad = Color::black();
 
             // NEE (MIS weight)
-            if target.reflection.is_nee_target() {
-                if let Some((sample, light)) = scene.sample_on_lights() {
-                    // 衝突点から光源点への向き
-                    let shadow_dir = V3U::from_v3(sample.point - hit.position);
-                    // 反射面がDiffuseでないときのときは寄与を計算しない
-                    // 本来はBSDFを考慮すべき
-                    let object = scene
-                        .intersect(&Ray {
-                            origin: hit.position,
-                            dir: shadow_dir,
-                        })
-                        .unwrap()
-                        .1;
-                    if object == light {
-                        let cos_light = shadow_dir.dot(&sample.normal).abs();
-                        let dist2 = (sample.point - hit.position).len_square();
+            if let Some((sample, light)) = scene.sample_on_lights() {
+                // 衝突点から光源点への向き
+                let shadow_dir = V3U::from_v3(sample.point - hit.position);
+                // 反射面がDiffuseでないときのときは寄与を計算しない
+                // 本来はBSDFを考慮すべき
+                let object = scene
+                    .intersect(&Ray {
+                        origin: hit.position,
+                        dir: shadow_dir,
+                    })
+                    .unwrap()
+                    .1;
+                if object == light {
+                    let cos_light = shadow_dir.dot(&sample.normal).abs();
+                    let dist2 = (sample.point - hit.position).len_square();
 
-                        // 幾何項
-                        let g = shadow_dir.dot(&hit.normal).abs() * cos_light / dist2;
-                        // 単位をlightのpdfに合わせる
-                        let bsdf_pdf = target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir)
-                            * cos_light
-                            / dist2;
-                        let mis_weight = sample.pdf_value / (sample.pdf_value + bsdf_pdf);
+                    // 幾何項
+                    let g = shadow_dir.dot(&hit.normal).abs() * cos_light / dist2;
+                    // 単位をlightのpdfに合わせる
+                    let bsdf_pdf = target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir)
+                        * cos_light
+                        / dist2;
+                    let mis_weight = sample.pdf_value / (sample.pdf_value + bsdf_pdf);
 
-                        rad += (target.color)
-                            .scale(target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir))
-                            .blend(light.emission)
-                            .scale(g / (q * sample.pdf_value))
-                            .scale(mis_weight);
-                    }
+                    rad += (target.color)
+                        .scale(target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir))
+                        .blend(light.emission)
+                        .scale(g / (q * sample.pdf_value))
+                        .scale(mis_weight);
                 }
             }
-
-            // 反射
-            let reflected = target.reflection.reflected(ray, &hit);
-            let next_radience = self
-                .radience(
-                    scene,
-                    &reflected.ray,
-                    depth + 1,
-                    // specular面などのNEEの対象でないものの場合は特別扱いする
-                    !target.reflection.is_nee_target(),
-                )
-                .scale(reflected.contribution);
 
             // BSDF Sampling (MIS weight)
             if target.emission > Color::black() {
@@ -146,10 +132,16 @@ impl Renderer {
                 // 単位をBSDFのpdfに合わせる
                 let light_pdf = target.area_pdf() * (ray.origin - hit.position).len_square()
                     / (ray.dir.dot(&hit.normal).cos().abs());
-                let mis_weight = reflected.pdf_value / (reflected.pdf_value + light_pdf);
+                let mis_weight = bsdf_pdf / (bsdf_pdf + light_pdf);
 
                 rad += target.emission.scale(mis_weight);
             }
+
+            // 反射
+            let reflected = target.reflection.reflected(ray, &hit);
+            let next_radience = self
+                .radience(scene, &reflected.ray, depth + 1, reflected.pdf_value)
+                .scale(reflected.contribution);
 
             rad += target.emission
                 + (target.color)
