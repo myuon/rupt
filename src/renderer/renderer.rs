@@ -106,25 +106,24 @@ impl Renderer {
                         .unwrap()
                         .1;
                     if object == light {
+                        let cos_light = shadow_dir.dot(&sample.normal).abs();
+                        let dist2 = (sample.point - hit.position).len_square();
+
                         // 幾何項
-                        let g = shadow_dir.dot(&hit.normal).abs()
-                            * shadow_dir.neg().dot(&sample.normal).abs()
-                            / (sample.point - hit.position).len_square();
+                        let g = shadow_dir.dot(&hit.normal).abs() * cos_light / dist2;
+                        // 単位をlightのpdfに合わせる
+                        let bsdf_pdf = target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir)
+                            * cos_light
+                            / dist2;
+                        let mis_weight = sample.pdf_value / (sample.pdf_value + bsdf_pdf);
+
                         rad += (target.color)
                             .scale(target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir))
                             .blend(light.emission)
-                            .scale(g / (q * sample.pdf_value));
+                            .scale(g / (q * sample.pdf_value))
+                            .scale(mis_weight);
                     }
                 }
-            }
-
-            // 光源からの寄与を二重に計算しないように、光源に当たった場合は寄与を計算しない(specular面での反射を除く)
-            if target.emission > Color::black() {
-                return if is_previous_specular {
-                    target.emission
-                } else {
-                    Color::black()
-                };
             }
 
             // 反射
@@ -138,6 +137,19 @@ impl Renderer {
                     !target.reflection.is_nee_target(),
                 )
                 .scale(reflected.contribution);
+
+            // BSDF Sampling (MIS weight)
+            if target.emission > Color::black() {
+                // ここで、pdfはreflectedから取っているがそれとtargetを組み合わせて計算するのは良いのか？
+                // 異なるrayに対するpdfを計算してるようにも見える…
+
+                // 単位をBSDFのpdfに合わせる
+                let light_pdf = target.area_pdf() * (ray.origin - hit.position).len_square()
+                    / (ray.dir.dot(&hit.normal).cos().abs());
+                let mis_weight = reflected.pdf_value / (reflected.pdf_value + light_pdf);
+
+                rad += target.emission.scale(mis_weight);
+            }
 
             rad += target.emission
                 + (target.color)

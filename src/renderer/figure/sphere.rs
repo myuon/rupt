@@ -54,10 +54,14 @@ impl Sphere {
                 return SampleRecord {
                     point: v.scale(self.radius) + self.center,
                     normal: V3U::from_v3(v - self.center),
-                    pdf_value: 1.0 / (4.0 * std::f64::consts::PI * self.radius * self.radius),
+                    pdf_value: self.area_pdf(),
                 };
             }
         }
+    }
+
+    pub fn area_pdf(&self) -> f64 {
+        1.0 / (4.0 * std::f64::consts::PI * self.radius * self.radius)
     }
 }
 

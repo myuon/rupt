@@ -125,44 +125,30 @@ fn mis_example() -> renderer::Scene {
         renderer::Object {
             figure: renderer::Figure::Sphere(renderer::Sphere {
                 center: V3::new(0.0, 0.0, 0.0),
-                radius: 500.0,
+                radius: 5000.0,
             }),
             color: Color::new(0.75, 0.75, 0.75),
             ..Default::default()
         },
         renderer::Object {
             figure: renderer::Figure::Rhombus(renderer::Rhombus {
-                origin: V3::new(-50.0, 70.0, -60.0),
-                a: V3::new(200.0, 0.0, 0.0),
+                origin: V3::new(-100.0, 90.0, -100.0),
+                a: V3::new(300.0, 0.0, 0.0),
                 b: V3::new(0.0, -25.0, 10.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
             reflection: Reflection::Phong(renderer::PhongParameter {
                 diffuse_reflectivity: 0.0,
                 specular_reflectivity: 1.0,
-                exponent: 100000,
+                exponent: 1000,
             }),
             ..Default::default()
         },
         renderer::Object {
             figure: renderer::Figure::Rhombus(renderer::Rhombus {
-                origin: V3::new(-50.0, 40.0, -40.0),
-                a: V3::new(200.0, 0.0, 0.0),
+                origin: V3::new(-100.0, 60.0, -100.0),
+                a: V3::new(300.0, 0.0, 0.0),
                 b: V3::new(0.0, -20.0, 15.0),
-            }),
-            color: Color::new(0.75, 0.75, 0.75),
-            reflection: Reflection::Phong(renderer::PhongParameter {
-                diffuse_reflectivity: 0.0,
-                specular_reflectivity: 1.0,
-                exponent: 5000,
-            }),
-            ..Default::default()
-        },
-        renderer::Object {
-            figure: renderer::Figure::Rhombus(renderer::Rhombus {
-                origin: V3::new(-50.0, 15.0, -10.0),
-                a: V3::new(200.0, 0.0, 0.0),
-                b: V3::new(0.0, -15.0, 20.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
             reflection: Reflection::Phong(renderer::PhongParameter {
@@ -174,24 +160,38 @@ fn mis_example() -> renderer::Scene {
         },
         renderer::Object {
             figure: renderer::Figure::Rhombus(renderer::Rhombus {
-                origin: V3::new(-50.0, -5.0, 20.0),
-                a: V3::new(200.0, 0.0, 0.0),
+                origin: V3::new(-100.0, 20.0, -100.0),
+                a: V3::new(300.0, 0.0, 0.0),
+                b: V3::new(0.0, -15.0, 20.0),
+            }),
+            color: Color::new(0.75, 0.75, 0.75),
+            reflection: Reflection::Phong(renderer::PhongParameter {
+                diffuse_reflectivity: 0.0,
+                specular_reflectivity: 1.0,
+                exponent: 100,
+            }),
+            ..Default::default()
+        },
+        renderer::Object {
+            figure: renderer::Figure::Rhombus(renderer::Rhombus {
+                origin: V3::new(-100.0, -20.0, -80.0),
+                a: V3::new(300.0, 0.0, 0.0),
                 b: V3::new(0.0, -10.0, 25.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
             reflection: Reflection::Phong(renderer::PhongParameter {
                 diffuse_reflectivity: 0.0,
                 specular_reflectivity: 1.0,
-                exponent: 10,
+                exponent: 15,
             }),
             ..Default::default()
         },
         renderer::Object {
             figure: renderer::Figure::Sphere(renderer::Sphere {
-                center: V3::new(-50.0, 110.0, -10.0),
+                center: V3::new(-40.0, 110.0, -10.0),
                 radius: 0.5,
             }),
-            emission: Color::new(900.0, 0.5, 0.5),
+            emission: Color::new(90000.0, 0.5, 0.5),
             ..Default::default()
         },
         renderer::Object {
@@ -215,14 +215,14 @@ fn mis_example() -> renderer::Scene {
                 center: V3::new(150.0, 110.0, -10.0),
                 radius: 25.0,
             }),
-            emission: Color::new(0.5, 1.5, 2.0),
+            emission: Color::new(1.0, 3.0, 4.0),
             ..Default::default()
         },
     ])
 }
 
 fn main() {
-    let scene = cornell_box();
+    //let scene = cornell_box();
     let scene = mis_example();
     let renderer = Renderer {
         width: 640,

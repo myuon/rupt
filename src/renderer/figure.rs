@@ -113,6 +113,16 @@ impl Object {
         }
     }
 
+    pub fn area_pdf(&self) -> f64 {
+        use Figure::*;
+
+        match &self.figure {
+            Rhombus(r) => r.area_pdf(),
+            Sphere(r) => r.area_pdf(),
+            _ => unimplemented!(),
+        }
+    }
+
     pub fn sample(&self) -> SampleRecord {
         use Figure::*;
 

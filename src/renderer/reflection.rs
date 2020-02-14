@@ -46,14 +46,16 @@ pub struct Reflected {
     pub ray: Ray,
     pub contribution: f64,
     pub weight: f64, // BSDF*cos(θ)/PDFの値(ただし反射率は別で計算される(データの持ち方の都合上…))
+    pub pdf_value: f64, // 計算に使用したPDFの値、MISのweight計算用
 }
 
 impl Reflected {
-    pub fn new(ray: Ray, weight: f64) -> Reflected {
+    pub fn new(ray: Ray, weight: f64, pdf_value: f64) -> Reflected {
         Reflected {
             ray,
             contribution: 1.0,
             weight,
+            pdf_value,
         }
     }
 }
@@ -113,9 +115,16 @@ impl Reflection {
             Reflection::Diffuse => {
                 // Diffuseでは入射角のcosine値/πに沿ったimportance samplingを行っているのでそれがpdfとなる
                 // Diffuse面でのBSDFはρ/πでpdfはcos(θ)/πなのでweight = BSDF・cos(θ)/ρ・pdf = 1
-                Reflected::new(diffuse_ray, 1.0)
+                Reflected::new(diffuse_ray, 1.0, ray.dir.dot(&hit.normal).abs())
             }
-            Reflection::Specular => Reflected::new(specular_ray, 1.0),
+            Reflection::Specular => {
+                // specular面の場合はデルタ関数が出てくるがここでは適当な巨大な数にしておく
+                Reflected::new(
+                    specular_ray,
+                    1.0,
+                    1000000.0 / ray.dir.dot(&hit.normal).abs(),
+                )
+            }
             Reflection::Glossy(r) => {
                 let mut specular_ray_mut = specular_ray;
                 specular_ray_mut.dir =
@@ -124,7 +133,11 @@ impl Reflection {
                 let specular_angle_cosine = specular_ray_mut.dir.dot(&hit.normal).abs();
 
                 // これはウソ(scatter rayの選び方が適当なのでpdfよくわからないがspecular rayとのcosine値から適当に計算しておく)
-                Reflected::new(specular_ray_mut, 1.0 / specular_angle_cosine)
+                Reflected::new(
+                    specular_ray_mut,
+                    1.0 / specular_angle_cosine,
+                    1.0 / specular_angle_cosine,
+                )
             }
             Reflection::Refraction => {
                 let nc = 1.0; // 真空の屈折率
@@ -135,7 +148,11 @@ impl Reflection {
 
                 // 全反射
                 if cos2t < 0.0 {
-                    return Reflected::new(specular_ray, 1.0);
+                    return Reflected::new(
+                        specular_ray,
+                        1.0,
+                        1000000.0 / ray.dir.dot(&hit.normal).abs(),
+                    );
                 }
 
                 let refraction_ray = Ray {
@@ -172,12 +189,14 @@ impl Reflection {
                         ray: specular_ray,
                         contribution: re,
                         weight: 1.0 / q,
+                        pdf_value: 1000000.0 / ray.dir.dot(&hit.normal).abs(),
                     }
                 } else {
                     Reflected {
                         ray: refraction_ray,
                         contribution: tr,
                         weight: 1.0 / (1.0 - q),
+                        pdf_value: 1000000.0 / ray.dir.dot(&hit.normal).abs(),
                     }
                 }
             }
@@ -193,6 +212,7 @@ impl Reflection {
                         ray: diffuse_ray,
                         contribution: params.diffuse_reflectivity,
                         weight: 1.0,
+                        pdf_value: ray.dir.dot(&hit.normal).abs(),
                     }
                 } else if xi < params.diffuse_reflectivity + params.specular_reflectivity {
                     // specular lobe sampling
@@ -213,6 +233,7 @@ impl Reflection {
                         },
                         contribution: params.specular_reflectivity,
                         weight: phong_reflect_dir.dot(&hit.normal),
+                        pdf_value: params.specular_pdf(r2),
                     }
                 } else {
                     Reflected {

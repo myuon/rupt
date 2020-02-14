@@ -56,7 +56,7 @@ impl Rhombus {
         SampleRecord {
             point: self.origin + self.a.scale(x) + self.b.scale(y),
             normal: V3U::from_v3(self.a.cross(self.b)),
-            pdf_value: 1.0 / (self.a.cross(self.b).len()),
+            pdf_value: self.area_pdf(),
         }
     }
 
@@ -68,6 +68,10 @@ impl Rhombus {
             self.origin + self.b,
             self.origin + self.a + self.b,
         ]
+    }
+
+    pub fn area_pdf(&self) -> f64 {
+        1.0 / (self.a.cross(self.b).len())
     }
 }
 
