@@ -91,29 +91,30 @@ impl Renderer {
 
             let mut rad = Color::black();
 
-            // NEE
-            if let Some((sample, light)) = scene.sample_on_lights() {
-                // 衝突点から光源点への向き
-                let shadow_dir = V3U::from_v3(sample.point - hit.position);
-
-                // 反射面がDiffuseでないときのときは寄与を計算しない
-                // 本来はBSDFを考慮すべき
-                let object = scene
-                    .intersect(&Ray {
-                        origin: hit.position,
-                        dir: shadow_dir,
-                    })
-                    .unwrap()
-                    .1;
-                if object == light && target.reflection.is_nee_target() {
-                    // 幾何項
-                    let g = shadow_dir.dot(&hit.normal).abs()
-                        * shadow_dir.neg().dot(&sample.normal).abs()
-                        / (sample.point - hit.position).len_square();
-                    rad += (target.color)
-                        .scale(target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir))
-                        .blend(light.emission)
-                        .scale(g / (q * sample.pdf_value));
+            // NEE (MIS weight)
+            if target.reflection.is_nee_target() {
+                if let Some((sample, light)) = scene.sample_on_lights() {
+                    // 衝突点から光源点への向き
+                    let shadow_dir = V3U::from_v3(sample.point - hit.position);
+                    // 反射面がDiffuseでないときのときは寄与を計算しない
+                    // 本来はBSDFを考慮すべき
+                    let object = scene
+                        .intersect(&Ray {
+                            origin: hit.position,
+                            dir: shadow_dir,
+                        })
+                        .unwrap()
+                        .1;
+                    if object == light {
+                        // 幾何項
+                        let g = shadow_dir.dot(&hit.normal).abs()
+                            * shadow_dir.neg().dot(&sample.normal).abs()
+                            / (sample.point - hit.position).len_square();
+                        rad += (target.color)
+                            .scale(target.reflection.nee_bsdf_weight(ray, &hit, shadow_dir))
+                            .blend(light.emission)
+                            .scale(g / (q * sample.pdf_value));
+                    }
                 }
             }
 

@@ -137,7 +137,11 @@ fn mis_example() -> renderer::Scene {
                 b: V3::new(0.0, -25.0, 10.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
-            reflection: Reflection::Glossy(0.05),
+            reflection: Reflection::Phong(renderer::PhongParameter {
+                diffuse_reflectivity: 0.0,
+                specular_reflectivity: 1.0,
+                exponent: 100000,
+            }),
             ..Default::default()
         },
         renderer::Object {
@@ -147,7 +151,11 @@ fn mis_example() -> renderer::Scene {
                 b: V3::new(0.0, -20.0, 15.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
-            reflection: Reflection::Glossy(0.1),
+            reflection: Reflection::Phong(renderer::PhongParameter {
+                diffuse_reflectivity: 0.0,
+                specular_reflectivity: 1.0,
+                exponent: 5000,
+            }),
             ..Default::default()
         },
         renderer::Object {
@@ -157,7 +165,11 @@ fn mis_example() -> renderer::Scene {
                 b: V3::new(0.0, -15.0, 20.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
-            reflection: Reflection::Glossy(0.25),
+            reflection: Reflection::Phong(renderer::PhongParameter {
+                diffuse_reflectivity: 0.0,
+                specular_reflectivity: 1.0,
+                exponent: 250,
+            }),
             ..Default::default()
         },
         renderer::Object {
@@ -167,7 +179,11 @@ fn mis_example() -> renderer::Scene {
                 b: V3::new(0.0, -10.0, 25.0),
             }),
             color: Color::new(0.75, 0.75, 0.75),
-            reflection: Reflection::Glossy(0.5),
+            reflection: Reflection::Phong(renderer::PhongParameter {
+                diffuse_reflectivity: 0.0,
+                specular_reflectivity: 1.0,
+                exponent: 10,
+            }),
             ..Default::default()
         },
         renderer::Object {
@@ -207,7 +223,7 @@ fn mis_example() -> renderer::Scene {
 
 fn main() {
     let scene = cornell_box();
-    //let scene = mis_example();
+    let scene = mis_example();
     let renderer = Renderer {
         width: 640,
         height: 480,
