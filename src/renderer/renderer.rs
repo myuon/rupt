@@ -95,8 +95,6 @@ impl Renderer {
             if let Some((sample, light)) = scene.sample_on_lights() {
                 // 衝突点から光源点への向き
                 let shadow_dir = V3U::from_v3(sample.point - hit.position);
-                // 反射面がDiffuseでないときのときは寄与を計算しない
-                // 本来はBSDFを考慮すべき
                 let object = scene
                     .intersect(&Ray {
                         origin: hit.position,
@@ -126,9 +124,6 @@ impl Renderer {
 
             // BSDF Sampling (MIS weight)
             if target.emission > Color::black() {
-                // ここで、pdfはreflectedから取っているがそれとtargetを組み合わせて計算するのは良いのか？
-                // 異なるrayに対するpdfを計算してるようにも見える…
-
                 // 単位をBSDFのpdfに合わせる
                 let light_pdf = target.area_pdf() * (ray.origin - hit.position).len_square()
                     / (ray.dir.dot(&hit.normal).cos().abs());
