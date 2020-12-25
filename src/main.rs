@@ -223,12 +223,15 @@ fn mis_example() -> renderer::Scene {
 
 fn main() {
     let scene = cornell_box();
-    //let scene = mis_example();
+    let scene = mis_example();
     let option = RendererOption {
         enable_mis: option_env!("ENABLE_MIS")
             .map(|r| r.parse::<bool>().unwrap())
             .unwrap_or(true),
         mis_power_heuristic: 2,
+        enable_mis_debug_mode: option_env!("ENABLE_MIS_DEBUG_MODE")
+            .map(|r| r.parse::<bool>().unwrap())
+            .unwrap_or(false),
     };
 
     let renderer = Renderer {

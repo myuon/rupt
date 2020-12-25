@@ -7,8 +7,10 @@ use crate::wrapper::{
 use rayon::prelude::*;
 use std::fs::File;
 
+#[derive(Debug)]
 pub struct RendererOption {
     pub enable_mis: bool,
+    pub enable_mis_debug_mode: bool,
     pub mis_power_heuristic: i32,
 }
 
@@ -92,7 +94,13 @@ impl Renderer {
 
         while let Some((hit, target)) = scene.intersect(&ray) {
             if target.emission > Color::black() {
-                rad += target.emission.scale(path_weight).blend(path_color);
+                rad += (if self.option.enable_mis_debug_mode {
+                    Color::new(5.0, 5.0, 5.0)
+                } else {
+                    target.emission
+                })
+                .scale(path_weight)
+                .blend(path_color);
             }
 
             if self.option.enable_mis && target.reflection.is_nee_target() {
@@ -121,13 +129,16 @@ impl Renderer {
                             / (sample.pdf_value.powi(self.option.mis_power_heuristic)
                                 + bsdf_pdf.powi(self.option.mis_power_heuristic));
 
-                        rad += (target.color)
-                            .blend(light.emission)
-                            .scale(target.reflection.nee_bsdf_weight(&ray, &hit, shadow_dir))
-                            .scale(g / sample.pdf_value)
-                            .scale(mis_weight)
-                            .scale(path_weight)
-                            .blend(path_color);
+                        rad += (if self.option.enable_mis_debug_mode {
+                            Color::new(200.0, 0.0, 0.0)
+                        } else {
+                            (target.color).blend(light.emission)
+                        })
+                        .scale(target.reflection.nee_bsdf_weight(&ray, &hit, shadow_dir))
+                        .scale(g / sample.pdf_value)
+                        .blend(path_color)
+                        .scale(mis_weight)
+                        .scale(path_weight);
                     }
                 }
 
@@ -140,10 +151,14 @@ impl Renderer {
                         / (bsdf_pdf.powi(self.option.mis_power_heuristic)
                             + light_pdf.powi(self.option.mis_power_heuristic));
 
-                    rad += (target.emission)
-                        .scale(mis_weight)
-                        .scale(path_weight)
-                        .blend(path_color);
+                    rad += (if self.option.enable_mis_debug_mode {
+                        Color::new(0.0, 200.0, 0.0)
+                    } else {
+                        target.emission
+                    })
+                    .blend(path_color)
+                    .scale(mis_weight)
+                    .scale(path_weight);
                 }
             }
 
