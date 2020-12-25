@@ -191,7 +191,7 @@ fn mis_example() -> renderer::Scene {
                 center: V3::new(-40.0, 110.0, -10.0),
                 radius: 0.5,
             }),
-            emission: Color::new(90000.0, 0.5, 0.5),
+            emission: Color::new(9000.0, 0.5, 0.5),
             ..Default::default()
         },
         renderer::Object {
@@ -223,7 +223,7 @@ fn mis_example() -> renderer::Scene {
 
 fn main() {
     let scene = cornell_box();
-    let scene = mis_example();
+    //let scene = mis_example();
     let option = RendererOption {
         enable_mis: option_env!("ENABLE_MIS")
             .map(|r| r.parse::<bool>().unwrap())
@@ -237,7 +237,7 @@ fn main() {
     let renderer = Renderer {
         width: 640,
         height: 480,
-        spp: 64,
+        spp: 16,
         gamma: 2.2,
         option,
     };

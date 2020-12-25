@@ -95,11 +95,16 @@ impl Renderer {
         let mut bsdf_pdf: f64 = 1.0;
 
         while let Some((hit, target)) = scene.intersect(&ray) {
-            if (reflected_from_specular_ray || depth == 0) && target.emission > Color::black() {
+            if (!self.option.enable_mis || (reflected_from_specular_ray || depth == 0))
+                && target.emission > Color::black()
+            {
                 rad += target.emission.scale(path_weight).blend(path_color);
             }
 
-            if self.option.enable_mis && target.reflection.is_nee_target() {
+            if self.option.enable_mis
+                && !(target.emission > Color::black())
+                && target.reflection.is_nee_target()
+            {
                 // NEE (MIS weight)
                 if let Some((sample, light)) = scene.sample_on_lights() {
                     // 衝突点から光源点への向き
@@ -112,11 +117,11 @@ impl Renderer {
                         .unwrap()
                         .1;
                     if object == light {
-                        let cos_light = shadow_dir.dot(&sample.normal).abs();
-                        let dist2 = (sample.point - hit.position).len_square();
-
                         // 幾何項
-                        let g = shadow_dir.dot(&hit.normal).abs() * cos_light / dist2;
+                        let g = shadow_dir.dot(&hit.normal).abs()
+                            * shadow_dir.dot(&sample.normal).abs()
+                            / (sample.point - hit.position).len_square();
+                        /*
                         // 単位をlightのpdfに合わせる
                         let bsdf_pdf = target.reflection.nee_bsdf_weight(&ray, &hit, shadow_dir)
                             * cos_light
@@ -124,20 +129,24 @@ impl Renderer {
                         let mis_weight = sample.pdf_value.powi(self.option.mis_power_heuristic)
                             / (sample.pdf_value.powi(self.option.mis_power_heuristic)
                                 + bsdf_pdf.powi(self.option.mis_power_heuristic));
+                        */
 
                         rad += (if self.option.enable_mis_debug_mode {
                             Color::new(200.0, 0.0, 0.0)
                         } else {
-                            (target.color).blend(light.emission)
+                            light.emission
                         })
-                        .scale(target.reflection.nee_bsdf_weight(&ray, &hit, shadow_dir))
+                        .blend(
+                            (target.color)
+                                .scale(target.reflection.nee_bsdf_weight(&ray, &hit, shadow_dir)),
+                        )
                         .scale(g / sample.pdf_value)
                         .blend(path_color)
-                        .scale(mis_weight)
                         .scale(path_weight);
                     }
                 }
 
+                /*
                 // BSDF Sampling (MIS weight)
                 if target.emission > Color::black() {
                     // 単位をBSDFのpdfに合わせる
@@ -156,9 +165,8 @@ impl Renderer {
                     .scale(mis_weight)
                     .scale(path_weight);
                 }
+                */
             }
-
-            reflected_from_specular_ray = !target.reflection.is_nee_target();
 
             // Russian Roulette
             let r = rand::random::<f64>();
@@ -169,6 +177,8 @@ impl Renderer {
             } else if r > rr_threshould || depth >= DEPTH_LIMIT {
                 break;
             }
+
+            reflected_from_specular_ray = !target.reflection.is_nee_target();
 
             // 反射
             let reflected = target.reflection.reflected(&ray, &hit);
