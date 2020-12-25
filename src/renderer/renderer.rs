@@ -75,7 +75,7 @@ impl Renderer {
                         dir: V3U::from_v3(screen_position - world.camera.position),
                     };
 
-                    radience += self.radience(scene, ray, 0, 1.0);
+                    radience += self.radience(scene, ray);
                 }
 
                 radience.scale(1.0 / self.spp as f64)
@@ -85,22 +85,18 @@ impl Renderer {
         Picture::new(pixels)
     }
 
-    fn radience(&self, scene: &Scene, ray: Ray, depth: i32, bsdf_pdf: f64) -> Color {
-        let mut depth = depth;
+    fn radience(&self, scene: &Scene, ray: Ray) -> Color {
+        let mut depth = 0;
         let mut ray = ray;
         let mut rad = Color::black();
         let mut path_weight = 1.0;
         let mut path_color = Color::new(1.0, 1.0, 1.0);
+        let mut reflected_from_specular_ray = false;
+        let mut bsdf_pdf: f64 = 1.0;
 
         while let Some((hit, target)) = scene.intersect(&ray) {
-            if target.emission > Color::black() {
-                rad += (if self.option.enable_mis_debug_mode {
-                    Color::new(5.0, 5.0, 5.0)
-                } else {
-                    target.emission
-                })
-                .scale(path_weight)
-                .blend(path_color);
+            if (reflected_from_specular_ray || depth == 0) && target.emission > Color::black() {
+                rad += target.emission.scale(path_weight).blend(path_color);
             }
 
             if self.option.enable_mis && target.reflection.is_nee_target() {
@@ -162,6 +158,8 @@ impl Renderer {
                 }
             }
 
+            reflected_from_specular_ray = !target.reflection.is_nee_target();
+
             // Russian Roulette
             let r = rand::random::<f64>();
             let mut rr_threshould = 0.5;
@@ -180,6 +178,7 @@ impl Renderer {
                 .scale(reflected.weight / rr_threshould);
             ray = reflected.ray;
             depth += 1;
+            bsdf_pdf = reflected.pdf_value;
         }
 
         rad
