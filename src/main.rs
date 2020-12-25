@@ -224,11 +224,19 @@ fn mis_example() -> renderer::Scene {
 fn main() {
     let scene = cornell_box();
     //let scene = mis_example();
+    let option = RendererOption {
+        enable_mis: option_env!("ENABLE_MIS")
+            .map(|r| r.parse::<bool>().unwrap())
+            .unwrap_or(true),
+        mis_power_heuristic: 2,
+    };
+
     let renderer = Renderer {
         width: 640,
         height: 480,
         spp: 64,
         gamma: 2.2,
+        option,
     };
     let world = WorldSetting {
         camera: Camera {

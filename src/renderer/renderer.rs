@@ -7,11 +7,17 @@ use crate::wrapper::{
 use rayon::prelude::*;
 use std::fs::File;
 
+pub struct RendererOption {
+    pub enable_mis: bool,
+    pub mis_power_heuristic: i32,
+}
+
 pub struct Renderer {
     pub width: i32,
     pub height: i32,
     pub spp: i32,   // samples per pixel
     pub gamma: f64, // for gamma correction
+    pub option: RendererOption,
 }
 
 pub struct Camera {
@@ -89,7 +95,7 @@ impl Renderer {
                 rad += target.emission.scale(path_weight).blend(path_color);
             }
 
-            if target.reflection.is_nee_target() {
+            if self.option.enable_mis && target.reflection.is_nee_target() {
                 // NEE (MIS weight)
                 if let Some((sample, light)) = scene.sample_on_lights() {
                     // 衝突点から光源点への向き
@@ -111,7 +117,9 @@ impl Renderer {
                         let bsdf_pdf = target.reflection.nee_bsdf_weight(&ray, &hit, shadow_dir)
                             * cos_light
                             / dist2;
-                        let mis_weight = sample.pdf_value / (sample.pdf_value + bsdf_pdf);
+                        let mis_weight = sample.pdf_value.powi(self.option.mis_power_heuristic)
+                            / (sample.pdf_value.powi(self.option.mis_power_heuristic)
+                                + bsdf_pdf.powi(self.option.mis_power_heuristic));
 
                         rad += (target.color)
                             .blend(light.emission)
@@ -128,7 +136,9 @@ impl Renderer {
                     // 単位をBSDFのpdfに合わせる
                     let light_pdf = target.area_pdf() * (ray.origin - hit.position).len_square()
                         / (ray.dir.dot(&hit.normal).cos().abs());
-                    let mis_weight = bsdf_pdf / (bsdf_pdf + light_pdf);
+                    let mis_weight = bsdf_pdf.powi(self.option.mis_power_heuristic)
+                        / (bsdf_pdf.powi(self.option.mis_power_heuristic)
+                            + light_pdf.powi(self.option.mis_power_heuristic));
 
                     rad += (target.emission)
                         .scale(mis_weight)
